@@ -1,0 +1,1556 @@
+﻿diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/constant/DistributionRedisConstant.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/constant/DistributionRedisConstant.java
+new file mode 100644
+index 0000000..6a5b90e
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/constant/DistributionRedisConstant.java
+@@ -0,0 +1,55 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.common.constant;
++
++/**
++ * 分发优惠券服务 Redis 缓存常量类
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-13
++ */
++public final class DistributionRedisConstant {
++
++    /**
++     * 优惠券模板推送执行进度 Key
++     */
++    public static final String TEMPLATE_TASK_EXECUTE_PROGRESS_KEY = "one-coupon_distribution:template-task-execute-progress:%s";
++
++    /**
++     * 批量保存领取用户券用户 Key
++     */
++    public static final String TEMPLATE_TASK_EXECUTE_BATCH_USER_KEY = "one-coupon_distribution:template-task-execute-batch-user:%s";
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/constant/EngineRedisConstant.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/constant/EngineRedisConstant.java
+index 22b200b..68fb5f1 100644
+--- a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/constant/EngineRedisConstant.java
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/constant/EngineRedisConstant.java
+@@ -52,4 +52,9 @@ public final class EngineRedisConstant {
+      * 用户已领取优惠券列表模板 Key
+      */
+     public static final String USER_COUPON_TEMPLATE_LIST_KEY = "one-coupon_engine:user-template-list:%s";
++
++    /**
++     * 限制用户领取优惠券模板次数缓存 Key
++     */
++    public static final String USER_COUPON_TEMPLATE_LIMIT_KEY = "one-coupon_engine:user-template-limit:";
+ }
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/entity/CouponTaskFailDO.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/entity/CouponTaskFailDO.java
+new file mode 100644
+index 0000000..13e9e8f
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/entity/CouponTaskFailDO.java
+@@ -0,0 +1,73 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.dao.entity;
++
++import com.baomidou.mybatisplus.annotation.TableField;
++import com.baomidou.mybatisplus.annotation.TableName;
++import lombok.AllArgsConstructor;
++import lombok.Builder;
++import lombok.Data;
++import lombok.NoArgsConstructor;
++
++/**
++ * 优惠券模板失败记录数据库持久层实体
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部沟通群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-08-31
++ */
++@Data
++@NoArgsConstructor
++@AllArgsConstructor
++@Builder
++@TableName("t_coupon_task_fail")
++public class CouponTaskFailDO {
++
++    /**
++     * id
++     */
++    private Long id;
++
++    /**
++     * 批量id
++     */
++    private Long batchId;
++
++    /**
++     * JSON字符串，存储失败原因，Excel 行数等信息
++     */
++    @TableField(value = "`json_object`")
++    private String jsonObject;
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/entity/UserCouponDO.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/entity/UserCouponDO.java
+index 56d8f55..9440364 100644
+--- a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/entity/UserCouponDO.java
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/entity/UserCouponDO.java
+@@ -125,4 +125,11 @@ public class UserCouponDO {
+      */
+     @TableField(fill = FieldFill.INSERT)
+     private Integer delFlag;
++
++    /**
++     * 分发 Excel 表格中用户所在的行数
++     * 不建议大家这么写，应该再创建一个 DTO，然后进行包装转换。为了避免代码扩散，这里小小的不规范一次
++     */
++    @TableField(exist = false)
++    private Integer rowNum;
+ }
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/mapper/CouponTaskFailMapper.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/mapper/CouponTaskFailMapper.java
+new file mode 100644
+index 0000000..259a183
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/mapper/CouponTaskFailMapper.java
+@@ -0,0 +1,48 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.dao.mapper;
++
++import com.baomidou.mybatisplus.core.mapper.BaseMapper;
++import com.nageoffer.onecoupon.distribution.dao.entity.CouponTaskFailDO;
++
++/**
++ * 优惠券模板失败记录数据库持久层
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部沟通群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-08-31
++ */
++public interface CouponTaskFailMapper extends BaseMapper<CouponTaskFailDO> {
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/mapper/CouponTemplateMapper.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/mapper/CouponTemplateMapper.java
+index ad09d8b..42801e1 100644
+--- a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/mapper/CouponTemplateMapper.java
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/mapper/CouponTemplateMapper.java
+@@ -50,8 +50,20 @@ public interface CouponTemplateMapper extends BaseMapper<CouponTemplateDO> {
+     /**
+      * 自减优惠券模板库存
+      *
++     * @param shopNumber       店铺编号
+      * @param couponTemplateId 优惠券模板 ID
+-     * @return 是否发生记录变更
++     * @param decrementStock   自减库存数量
++     * @return 发生记录变更行数
+      */
+     int decrementCouponTemplateStock(@Param("shopNumber") Long shopNumber, @Param("couponTemplateId") Long couponTemplateId, @Param("decrementStock") Integer decrementStock);
++
++    /**
++     * 自增优惠券模板库存
++     *
++     * @param shopNumber       店铺编号
++     * @param couponTemplateId 优惠券模板 ID
++     * @param incrementStock   自增库存数量
++     * @return 发生记录变更行数
++     */
++    int incrementCouponTemplateStock(@Param("shopNumber") Long shopNumber, @Param("couponTemplateId") Long couponTemplateId, @Param("incrementStock") Integer incrementStock);
+ }
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/consumer/CouponExecuteDistributionConsumer.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/consumer/CouponExecuteDistributionConsumer.java
+new file mode 100644
+index 0000000..93cbfa0
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/consumer/CouponExecuteDistributionConsumer.java
+@@ -0,0 +1,415 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.mq.consumer;
++
++import cn.hutool.core.collection.CollUtil;
++import cn.hutool.core.date.DateTime;
++import cn.hutool.core.date.DateUtil;
++import cn.hutool.core.lang.Singleton;
++import cn.hutool.core.map.MapUtil;
++import cn.hutool.core.util.IdUtil;
++import cn.hutool.core.util.StrUtil;
++import com.alibaba.excel.EasyExcel;
++import com.alibaba.excel.ExcelWriter;
++import com.alibaba.excel.write.metadata.WriteSheet;
++import com.alibaba.fastjson2.JSON;
++import com.alibaba.fastjson2.JSONObject;
++import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
++import com.baomidou.mybatisplus.core.toolkit.Wrappers;
++import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
++import com.fasterxml.jackson.databind.ObjectMapper;
++import com.nageoffer.onecoupon.distribution.common.constant.DistributionRedisConstant;
++import com.nageoffer.onecoupon.distribution.common.constant.EngineRedisConstant;
++import com.nageoffer.onecoupon.distribution.common.enums.CouponSourceEnum;
++import com.nageoffer.onecoupon.distribution.common.enums.CouponStatusEnum;
++import com.nageoffer.onecoupon.distribution.common.enums.CouponTaskStatusEnum;
++import com.nageoffer.onecoupon.distribution.dao.entity.CouponTaskDO;
++import com.nageoffer.onecoupon.distribution.dao.entity.CouponTaskFailDO;
++import com.nageoffer.onecoupon.distribution.dao.entity.CouponTemplateDO;
++import com.nageoffer.onecoupon.distribution.dao.entity.UserCouponDO;
++import com.nageoffer.onecoupon.distribution.dao.mapper.CouponTaskFailMapper;
++import com.nageoffer.onecoupon.distribution.dao.mapper.CouponTaskMapper;
++import com.nageoffer.onecoupon.distribution.dao.mapper.CouponTemplateMapper;
++import com.nageoffer.onecoupon.distribution.dao.mapper.UserCouponMapper;
++import com.nageoffer.onecoupon.distribution.mq.base.MessageWrapper;
++import com.nageoffer.onecoupon.distribution.mq.event.CouponTemplateDistributionEvent;
++import com.nageoffer.onecoupon.distribution.service.handler.excel.UserCouponTaskFailExcelObject;
++import lombok.RequiredArgsConstructor;
++import lombok.SneakyThrows;
++import lombok.extern.slf4j.Slf4j;
++import org.apache.ibatis.executor.BatchExecutorException;
++import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
++import org.apache.rocketmq.spring.core.RocketMQListener;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.context.annotation.Lazy;
++import org.springframework.core.io.ClassPathResource;
++import org.springframework.data.redis.core.StringRedisTemplate;
++import org.springframework.data.redis.core.script.DefaultRedisScript;
++import org.springframework.scripting.support.ResourceScriptSource;
++import org.springframework.stereotype.Component;
++import org.springframework.transaction.annotation.Propagation;
++import org.springframework.transaction.annotation.Transactional;
++
++import java.time.Duration;
++import java.time.LocalDateTime;
++import java.time.ZoneId;
++import java.util.ArrayList;
++import java.util.Arrays;
++import java.util.Date;
++import java.util.List;
++import java.util.Map;
++
++import static com.nageoffer.onecoupon.distribution.common.constant.EngineRedisConstant.USER_COUPON_TEMPLATE_LIMIT_KEY;
++
++/**
++ * 优惠券执行分发到用户消费者
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部沟通群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-14
++ */
++@Component
++@RequiredArgsConstructor
++@RocketMQMessageListener(
++        topic = "one-coupon_distribution-service_coupon-execute-distribution_topic${unique-name:}",
++        consumerGroup = "one-coupon_distribution-service_coupon-execute-distribution_cg${unique-name:}"
++)
++@Slf4j(topic = "CouponExecuteDistributionConsumer")
++public class CouponExecuteDistributionConsumer implements RocketMQListener<MessageWrapper<CouponTemplateDistributionEvent>> {
++
++    private final UserCouponMapper userCouponMapper;
++    private final CouponTemplateMapper couponTemplateMapper;
++    private final CouponTaskMapper couponTaskMapper;
++    private final CouponTaskFailMapper couponTaskFailMapper;
++    private final StringRedisTemplate stringRedisTemplate;
++
++    @Lazy
++    @Autowired
++    private CouponExecuteDistributionConsumer couponExecuteDistributionConsumer;
++
++    private final static int BATCH_USER_COUPON_SIZE = 5000;
++    private static final String BATCH_SAVE_USER_COUPON_LUA_PATH = "lua/batch_user_coupon_list.lua";
++    private final String excelPath = Paths.get("").toAbsolutePath() + "/tmp";
++
++    @Transactional(rollbackFor = Exception.class)
++    @Override
++    public void onMessage(MessageWrapper<CouponTemplateDistributionEvent> messageWrapper) {
++        // 开头打印日志，平常可 Debug 看任务参数，线上可报平安（比如消息是否消费，重新投递时获取参数等）
++        log.info("[消费者] 优惠券任务执行推送@分发到用户账号 - 执行消费逻辑，消息体：{}", JSON.toJSONString(messageWrapper));
++
++        // 当保存用户优惠券集合达到批量保存数量
++        CouponTemplateDistributionEvent event = messageWrapper.getMessage();
++        if (!event.getDistributionEndFlag() && event.getBatchUserSetSize() % BATCH_USER_COUPON_SIZE == 0) {
++            decrementCouponTemplateStockAndSaveUserCouponList(event);
++            return;
++        }
++
++        // 分发任务结束标识为 TRUE，代表已经没有 Excel 记录了
++        if (event.getDistributionEndFlag()) {
++            String batchUserSetKey = String.format(DistributionRedisConstant.TEMPLATE_TASK_EXECUTE_BATCH_USER_KEY, event.getCouponTaskId());
++            Long batchUserIdsSize = stringRedisTemplate.opsForSet().size(batchUserSetKey);
++            event.setBatchUserSetSize(batchUserIdsSize.intValue());
++
++            decrementCouponTemplateStockAndSaveUserCouponList(event);
++            List<String> batchUserMaps = stringRedisTemplate.opsForSet().pop(batchUserSetKey, Integer.MAX_VALUE);
++            // 此时待保存入库用户优惠券列表如果还有值，就意味着可能库存不足引起的
++            if (CollUtil.isNotEmpty(batchUserMaps)) {
++                // 添加到 t_coupon_task_fail 并标记错误原因，方便后续查看未成功发送的原因和记录
++                List<CouponTaskFailDO> couponTaskFailDOList = new ArrayList<>(batchUserMaps.size());
++                for (String batchUserMapStr : batchUserMaps) {
++                    Map<Object, Object> objectMap = MapUtil.builder()
++                            .put("rowNum", JSON.parseObject(batchUserMapStr).get("rowNum"))
++                            .put("cause", "优惠券模板库存不足")
++                            .build();
++                    CouponTaskFailDO couponTaskFailDO = CouponTaskFailDO.builder()
++                            .batchId(event.getCouponTaskBatchId())
++                            .jsonObject(com.alibaba.fastjson.JSON.toJSONString(objectMap))
++                            .build();
++                    couponTaskFailDOList.add(couponTaskFailDO);
++                }
++
++                // 添加到 t_coupon_task_fail 并标记错误原因
++                couponTaskFailMapper.insert(couponTaskFailDOList);
++            }
++
++            long initId = 0;
++            boolean isFirstIteration = true;  // 用于标识是否为第一次迭代
++            String failFileAddress = excelPath + "/用户分发记录失败Excel-" + event.getCouponTaskBatchId() + ".xlsx";
++
++            // 这里应该上传云 OSS 或者 MinIO 等存储平台，但是增加部署成功并且不太好往简历写就仅写入本地
++            try (ExcelWriter excelWriter = EasyExcel.write(failFileAddress, UserCouponTaskFailExcelObject.class).build()) {
++                WriteSheet writeSheet = EasyExcel.writerSheet("用户分发失败Sheet").build();
++                while (true) {
++                    List<CouponTaskFailDO> couponTaskFailDOList = listUserCouponTaskFail(event.getCouponTaskBatchId(), initId);
++                    if (CollUtil.isEmpty(couponTaskFailDOList)) {
++                        // 如果是第一次迭代且集合为空，则设置 failFileAddress 为 null
++                        if (isFirstIteration) {
++                            failFileAddress = null;
++                        }
++                        break;
++                    }
++
++                    // 标记第一次迭代已经完成
++                    isFirstIteration = false;
++
++                    // 将失败行数和失败原因写入 Excel 文件
++                    List<UserCouponTaskFailExcelObject> excelDataList = couponTaskFailDOList.stream()
++                            .map(each -> JSONObject.parseObject(each.getJsonObject(), UserCouponTaskFailExcelObject.class))
++                            .toList();
++                    excelWriter.write(excelDataList, writeSheet);
++
++                    // 查询出来的数据如果小于 BATCH_USER_COUPON_SIZE 意味着后面将不再有数据，返回即可
++                    if (couponTaskFailDOList.size() < BATCH_USER_COUPON_SIZE) {
++                        break;
++                    }
++
++                    // 更新 initId 为当前列表中最大 ID
++                    initId = couponTaskFailDOList.stream()
++                            .mapToLong(CouponTaskFailDO::getId)
++                            .max()
++                            .orElse(initId);
++                }
++            }
++
++            // 确保所有用户都已经接到优惠券后，设置优惠券推送任务完成时间
++            CouponTaskDO couponTaskDO = CouponTaskDO.builder()
++                    .id(event.getCouponTaskId())
++                    .status(CouponTaskStatusEnum.SUCCESS.getStatus())
++                    .completionTime(new Date())
++                    .failFileAddress(failFileAddress)
++                    .build();
++            couponTaskMapper.updateById(couponTaskDO);
++        }
++    }
++
++    @SneakyThrows
++    private void decrementCouponTemplateStockAndSaveUserCouponList(CouponTemplateDistributionEvent event) {
++        // 如果等于 0 意味着已经没有了库存，直接返回即可
++        Integer couponTemplateStock = decrementCouponTemplateStock(event, event.getBatchUserSetSize());
++        if (couponTemplateStock <= 0) {
++            return;
++        }
++
++        // 获取 Redis 中待保存入库用户优惠券列表
++        String batchUserSetKey = String.format(DistributionRedisConstant.TEMPLATE_TASK_EXECUTE_BATCH_USER_KEY, event.getCouponTaskId());
++        List<String> batchUserMaps = stringRedisTemplate.opsForSet().pop(batchUserSetKey, couponTemplateStock);
++
++        // 因为 batchUserIds 数据较多，ArrayList 会进行数次扩容，为了避免额外性能消耗，直接初始化 batchUserIds 大小的数组
++        List<UserCouponDO> userCouponDOList = new ArrayList<>(batchUserMaps.size());
++        Date now = new Date();
++
++        // 构建 userCouponDOList 用户优惠券批量数组
++        for (String each : batchUserMaps) {
++            JSONObject userIdAndRowNumJsonObject = JSON.parseObject(each);
++            DateTime validEndTime = DateUtil.offsetHour(now, JSON.parseObject(event.getCouponTemplateConsumeRule()).getInteger("validityPeriod"));
++            UserCouponDO userCouponDO = UserCouponDO.builder()
++                    .id(IdUtil.getSnowflakeNextId())
++                    .couponTemplateId(event.getCouponTemplateId())
++                    .rowNum(userIdAndRowNumJsonObject.getInteger("rowNum"))
++                    .userId(userIdAndRowNumJsonObject.getLong("userId"))
++                    .receiveTime(now)
++                    .receiveCount(1) // 代表第一次领取该优惠券
++                    .validStartTime(now)
++                    .validEndTime(validEndTime)
++                    .source(CouponSourceEnum.PLATFORM.getType())
++                    .status(CouponStatusEnum.EFFECTIVE.getType())
++                    .createTime(new Date())
++                    .updateTime(new Date())
++                    .delFlag(0)
++                    .build();
++            userCouponDOList.add(userCouponDO);
++        }
++
++        // 平台优惠券每个用户限领一次。批量新增用户优惠券记录，底层通过递归方式直到全部新增成功
++        batchSaveUserCouponList(event.getCouponTemplateId(), event.getCouponTaskBatchId(), userCouponDOList);
++
++        // 将这些优惠券添加到用户的领券记录中
++        List<String> userIdList = userCouponDOList.stream()
++                .map(UserCouponDO::getUserId)
++                .map(String::valueOf)
++                .toList();
++        String userIdsJson = new ObjectMapper().writeValueAsString(userIdList);
++
++        List<String> couponIdList = userCouponDOList.stream()
++                .map(each -> StrUtil.builder()
++                        .append(event.getCouponTemplateId())
++                        .append("_")
++                        .append(each.getId())
++                        .toString())
++                .map(String::valueOf)
++                .toList();
++        String couponIdsJson = new ObjectMapper().writeValueAsString(couponIdList);
++
++        // 调用 Lua 脚本时，传递参数
++        List<String> keys = Arrays.asList(
++                // 为什么要进行替换 %s 为空白字符串？因为后续代码需要使用 %s 进行动态值替换，但是当前 LUA 脚本中不需要，所以为了兼容后续不改动特此替换
++                StrUtil.replace(EngineRedisConstant.USER_COUPON_TEMPLATE_LIST_KEY, "%s", ""),
++                USER_COUPON_TEMPLATE_LIMIT_KEY,
++                String.valueOf(event.getCouponTemplateId())
++        );
++        List<String> args = Arrays.asList(
++                userIdsJson,
++                couponIdsJson,
++                String.valueOf(new Date().getTime()),
++                String.valueOf(
++                        // 取当前时间距离优惠券模板结束时间之间的秒数作为 Limit Key 的过期时间
++                        Duration.between(
++                                LocalDateTime.now(),
++                                event.getValidEndTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
++                        ).getSeconds()
++                )
++        );
++
++        // 获取 LUA 脚本，并保存到 Hutool 的单例管理容器，下次直接获取不需要加载
++        DefaultRedisScript<Void> buildLuaScript = Singleton.get(BATCH_SAVE_USER_COUPON_LUA_PATH, () -> {
++            DefaultRedisScript<Void> redisScript = new DefaultRedisScript<>();
++            redisScript.setScriptSource(new ResourceScriptSource(new ClassPathResource(BATCH_SAVE_USER_COUPON_LUA_PATH)));
++            redisScript.setResultType(Void.class);
++            return redisScript;
++        });
++        stringRedisTemplate.execute(buildLuaScript, keys, args.toArray());
++
++        // 增加库存回滚方案，如果用户已经领取优惠券被校验，需要将 Redis 预扣减库存回滚
++        int originalUserCouponSize = batchUserMaps.size();
++        // 如果用户已领取被校验会从集合中删除
++        int availableUserCouponSize = userCouponDOList.size();
++        int rollbackStock = originalUserCouponSize - availableUserCouponSize;
++        if (rollbackStock > 0) {
++            // 回滚优惠券模板缓存库存数量
++            stringRedisTemplate.opsForHash().increment(
++                    String.format(EngineRedisConstant.COUPON_TEMPLATE_KEY, event.getCouponTemplateId()),
++                    "stock",
++                    rollbackStock
++            );
++
++            // 回滚优惠券模板数据库库存数量
++            couponTemplateMapper.incrementCouponTemplateStock(event.getShopNumber(), event.getCouponTemplateId(), rollbackStock);
++        }
++    }
++
++    private Integer decrementCouponTemplateStock(CouponTemplateDistributionEvent event, Integer decrementStockSize) {
++        Long couponTemplateId = event.getCouponTemplateId();
++        int decremented = couponTemplateMapper.decrementCouponTemplateStock(event.getShopNumber(), couponTemplateId, decrementStockSize);
++
++        // 如果修改记录失败，意味着优惠券库存已不足，需要重试获取到可自减的库存数值
++        if (!SqlHelper.retBool(decremented)) {
++            LambdaQueryWrapper<CouponTemplateDO> queryWrapper = Wrappers.lambdaQuery(CouponTemplateDO.class)
++                    .eq(CouponTemplateDO::getShopNumber, event.getShopNumber())
++                    .eq(CouponTemplateDO::getId, couponTemplateId);
++            CouponTemplateDO couponTemplateDO = couponTemplateMapper.selectOne(queryWrapper);
++            return decrementCouponTemplateStock(event, couponTemplateDO.getStock());
++        }
++
++        return decrementStockSize;
++    }
++
++    private void batchSaveUserCouponList(Long couponTemplateId, Long
++            couponTaskBatchId, List<UserCouponDO> userCouponDOList) {
++        // MyBatis-Plus 批量执行用户优惠券记录
++        try {
++            userCouponMapper.insert(userCouponDOList, userCouponDOList.size());
++        } catch (Exception ex) {
++            Throwable cause = ex.getCause();
++            if (cause instanceof BatchExecutorException) {
++                // 添加到 t_coupon_task_fail 并标记错误原因，方便后续查看未成功发送的原因和记录
++                List<CouponTaskFailDO> couponTaskFailDOList = new ArrayList<>();
++                List<UserCouponDO> toRemove = new ArrayList<>();
++
++                // 调用批量新增失败后，为了避免大量重复失败，我们通过新增单条记录方式执行
++                userCouponDOList.forEach(each -> {
++                    try {
++                        userCouponMapper.insert(each);
++                    } catch (Exception ignored) {
++                        Boolean hasReceived = couponExecuteDistributionConsumer.hasUserReceivedCoupon(couponTemplateId, each.getUserId());
++                        if (hasReceived) {
++                            // 添加到 t_coupon_task_fail 并标记错误原因，方便后续查看未成功发送的原因和记录
++                            Map<Object, Object> objectMap = MapUtil.builder()
++                                    .put("rowNum", each.getRowNum())
++                                    .put("cause", "用户已领取该优惠券")
++                                    .build();
++                            CouponTaskFailDO couponTaskFailDO = CouponTaskFailDO.builder()
++                                    .batchId(couponTaskBatchId)
++                                    .jsonObject(com.alibaba.fastjson.JSON.toJSONString(objectMap))
++                                    .build();
++                            couponTaskFailDOList.add(couponTaskFailDO);
++
++                            // 从 userCouponDOList 中删除已经存在的记录
++                            toRemove.add(each);
++                        }
++                    }
++                });
++
++                // 批量新增 t_coupon_task_fail 表
++                couponTaskFailMapper.insert(couponTaskFailDOList, couponTaskFailDOList.size());
++
++                // 删除已经重复的内容
++                userCouponDOList.removeAll(toRemove);
++                return;
++            }
++
++            throw ex;
++        }
++    }
++
++    /**
++     * 查询用户是否已经领取过优惠券
++     *
++     * @param couponTemplateId 优惠券模板 ID
++     * @param userId           用户 ID
++     * @return 用户优惠券模板领取信息是否已存在
++     */
++    @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
++    public Boolean hasUserReceivedCoupon(Long couponTemplateId, Long userId) {
++        LambdaQueryWrapper<UserCouponDO> queryWrapper = Wrappers.lambdaQuery(UserCouponDO.class)
++                .eq(UserCouponDO::getUserId, userId)
++                .eq(UserCouponDO::getCouponTemplateId, couponTemplateId);
++        return userCouponMapper.selectOne(queryWrapper) != null;
++    }
++
++    /**
++     * 查询用户分发任务失败记录
++     *
++     * @param batchId 分发任务批次 ID
++     * @param maxId   上次读取最大 ID
++     * @return 用户分发任务失败记录集合
++     */
++    private List<CouponTaskFailDO> listUserCouponTaskFail(Long batchId, Long maxId) {
++        LambdaQueryWrapper<CouponTaskFailDO> queryWrapper = Wrappers.lambdaQuery(CouponTaskFailDO.class)
++                .eq(CouponTaskFailDO::getBatchId, batchId)
++                .gt(CouponTaskFailDO::getId, maxId)
++                .last("LIMIT " + BATCH_USER_COUPON_SIZE);
++        return couponTaskFailMapper.selectList(queryWrapper);
++    }
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/consumer/CouponTaskExecuteConsumer.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/consumer/CouponTaskExecuteConsumer.java
+index d92005c..ec6dd87 100644
+--- a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/consumer/CouponTaskExecuteConsumer.java
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/consumer/CouponTaskExecuteConsumer.java
+@@ -41,11 +41,12 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+ import com.nageoffer.onecoupon.distribution.common.enums.CouponTaskStatusEnum;
+ import com.nageoffer.onecoupon.distribution.common.enums.CouponTemplateStatusEnum;
+ import com.nageoffer.onecoupon.distribution.dao.entity.CouponTemplateDO;
++import com.nageoffer.onecoupon.distribution.dao.mapper.CouponTaskFailMapper;
+ import com.nageoffer.onecoupon.distribution.dao.mapper.CouponTaskMapper;
+ import com.nageoffer.onecoupon.distribution.dao.mapper.CouponTemplateMapper;
+-import com.nageoffer.onecoupon.distribution.dao.mapper.UserCouponMapper;
+ import com.nageoffer.onecoupon.distribution.mq.base.MessageWrapper;
+ import com.nageoffer.onecoupon.distribution.mq.event.CouponTaskExecuteEvent;
++import com.nageoffer.onecoupon.distribution.mq.producer.CouponExecuteDistributionProducer;
+ import com.nageoffer.onecoupon.distribution.service.handler.excel.CouponTaskExcelObject;
+ import com.nageoffer.onecoupon.distribution.service.handler.excel.ReadExcelDistributionListener;
+ import lombok.RequiredArgsConstructor;
+@@ -73,8 +74,10 @@ public class CouponTaskExecuteConsumer implements RocketMQListener<MessageWrappe
+ 
+     private final CouponTaskMapper couponTaskMapper;
+     private final CouponTemplateMapper couponTemplateMapper;
++    private final CouponTaskFailMapper couponTaskFailMapper;
++
+     private final StringRedisTemplate stringRedisTemplate;
+-    private final UserCouponMapper userCouponMapper;
++    private final CouponExecuteDistributionProducer couponExecuteDistributionProducer;
+ 
+     @Override
+     public void onMessage(MessageWrapper<CouponTaskExecuteEvent> messageWrapper) {
+@@ -102,12 +105,11 @@ public class CouponTaskExecuteConsumer implements RocketMQListener<MessageWrappe
+ 
+         // 正式开始执行优惠券推送任务
+         var readExcelDistributionListener = new ReadExcelDistributionListener(
+-                couponTaskId,
++                couponTaskDO,
+                 couponTemplateDO,
++                couponTaskFailMapper,
+                 stringRedisTemplate,
+-                couponTemplateMapper,
+-                userCouponMapper,
+-                couponTaskMapper
++                couponExecuteDistributionProducer
+         );
+         EasyExcel.read(couponTaskDO.getFileAddress(), CouponTaskExcelObject.class, readExcelDistributionListener).sheet().doRead();
+     }
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/event/CouponTemplateDistributionEvent.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/event/CouponTemplateDistributionEvent.java
+new file mode 100644
+index 0000000..dade7bc
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/event/CouponTemplateDistributionEvent.java
+@@ -0,0 +1,96 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.mq.event;
++
++import lombok.AllArgsConstructor;
++import lombok.Builder;
++import lombok.Data;
++import lombok.NoArgsConstructor;
++
++import java.util.Date;
++
++/**
++ * 优惠券模板任务执行事件
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-13
++ */
++@Data
++@Builder
++@NoArgsConstructor
++@AllArgsConstructor
++public class CouponTemplateDistributionEvent {
++
++    /**
++     * 优惠券分发任务id
++     */
++    private Long couponTaskId;
++
++    /**
++     * 优惠券分发任务批量id
++     */
++    private Long couponTaskBatchId;
++
++    /**
++     * 店铺编号
++     */
++    private Long shopNumber;
++
++    /**
++     * 优惠券模板id
++     */
++    private Long couponTemplateId;
++
++    /**
++     * 有效期结束时间
++     */
++    private Date validEndTime;
++
++    /**
++     * 消耗规则
++     */
++    private String couponTemplateConsumeRule;
++
++    /**
++     * 批量保存用户优惠券 Set 长度，默认满 5000 才会批量保存数据库
++     */
++    private Integer batchUserSetSize;
++
++    /**
++     * 分发结束标识
++     */
++    private Boolean distributionEndFlag;
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/producer/AbstractCommonSendProduceTemplate.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/producer/AbstractCommonSendProduceTemplate.java
+new file mode 100644
+index 0000000..496d2c3
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/producer/AbstractCommonSendProduceTemplate.java
+@@ -0,0 +1,115 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.mq.producer;
++
++import cn.hutool.core.util.StrUtil;
++import com.alibaba.fastjson2.JSON;
++import com.nageoffer.onecoupon.distribution.mq.base.BaseSendExtendDTO;
++import lombok.RequiredArgsConstructor;
++import lombok.extern.slf4j.Slf4j;
++import org.apache.rocketmq.client.producer.SendResult;
++import org.apache.rocketmq.spring.core.RocketMQTemplate;
++import org.springframework.messaging.Message;
++
++/**
++ * RocketMQ 抽象公共发送消息组件
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-13
++ */
++@RequiredArgsConstructor
++@Slf4j(topic = "CommonSendProduceTemplate")
++public abstract class AbstractCommonSendProduceTemplate<T> {
++
++    private final RocketMQTemplate rocketMQTemplate;
++
++    /**
++     * 构建消息发送事件基础扩充属性实体
++     *
++     * @param messageSendEvent 消息发送事件
++     * @return 扩充属性实体
++     */
++    protected abstract BaseSendExtendDTO buildBaseSendExtendParam(T messageSendEvent);
++
++    /**
++     * 构建消息基本参数，请求头、Keys...
++     *
++     * @param messageSendEvent 消息发送事件
++     * @param requestParam     扩充属性实体
++     * @return 消息基本参数
++     */
++    protected abstract Message<?> buildMessage(T messageSendEvent, BaseSendExtendDTO requestParam);
++
++    /**
++     * 消息事件通用发送
++     *
++     * @param messageSendEvent 消息发送事件
++     * @return 消息发送返回结果
++     */
++    public SendResult sendMessage(T messageSendEvent) {
++        BaseSendExtendDTO baseSendExtendDTO = buildBaseSendExtendParam(messageSendEvent);
++        SendResult sendResult;
++        try {
++            // 构建 Topic 目标落点 formats: `topicName:tags`
++            StringBuilder destinationBuilder = StrUtil.builder().append(baseSendExtendDTO.getTopic());
++            if (StrUtil.isNotBlank(baseSendExtendDTO.getTag())) {
++                destinationBuilder.append(":").append(baseSendExtendDTO.getTag());
++            }
++
++            // 延迟时间不为空，发送任意延迟消息，否则发送普通消息
++            if (baseSendExtendDTO.getDelayTime() != null) {
++                sendResult = rocketMQTemplate.syncSendDeliverTimeMills(
++                        destinationBuilder.toString(),
++                        buildMessage(messageSendEvent, baseSendExtendDTO),
++                        baseSendExtendDTO.getDelayTime()
++                );
++            } else {
++                sendResult = rocketMQTemplate.syncSend(
++                        destinationBuilder.toString(),
++                        buildMessage(messageSendEvent, baseSendExtendDTO),
++                        baseSendExtendDTO.getSentTimeout()
++                );
++            }
++
++            log.info("[生产者] {} - 发送结果：{}，消息ID：{}，消息Keys：{}", baseSendExtendDTO.getEventName(), sendResult.getSendStatus(), sendResult.getMsgId(), baseSendExtendDTO.getKeys());
++        } catch (Throwable ex) {
++            log.error("[生产者] {} - 消息发送失败，消息体：{}", baseSendExtendDTO.getEventName(), JSON.toJSONString(messageSendEvent), ex);
++            throw ex;
++        }
++
++        return sendResult;
++    }
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/producer/CouponExecuteDistributionProducer.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/producer/CouponExecuteDistributionProducer.java
+new file mode 100644
+index 0000000..e8ec535
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/producer/CouponExecuteDistributionProducer.java
+@@ -0,0 +1,89 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.mq.producer;
++
++import cn.hutool.core.util.StrUtil;
++import com.nageoffer.onecoupon.distribution.mq.base.BaseSendExtendDTO;
++import com.nageoffer.onecoupon.distribution.mq.base.MessageWrapper;
++import com.nageoffer.onecoupon.distribution.mq.event.CouponTemplateDistributionEvent;
++import lombok.extern.slf4j.Slf4j;
++import org.apache.rocketmq.common.message.MessageConst;
++import org.apache.rocketmq.spring.core.RocketMQTemplate;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.core.env.ConfigurableEnvironment;
++import org.springframework.messaging.Message;
++import org.springframework.messaging.support.MessageBuilder;
++import org.springframework.stereotype.Component;
++
++import java.util.UUID;
++
++/**
++ * 优惠券推送任务执行生产者
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-13
++ */
++@Slf4j
++@Component
++public class CouponExecuteDistributionProducer extends AbstractCommonSendProduceTemplate<CouponTemplateDistributionEvent> {
++
++    private final ConfigurableEnvironment environment;
++
++    public CouponExecuteDistributionProducer(@Autowired RocketMQTemplate rocketMQTemplate, @Autowired ConfigurableEnvironment environment) {
++        super(rocketMQTemplate);
++        this.environment = environment;
++    }
++
++    @Override
++    protected BaseSendExtendDTO buildBaseSendExtendParam(CouponTemplateDistributionEvent messageSendEvent) {
++        return BaseSendExtendDTO.builder()
++                .eventName("优惠券发放执行")
++                .keys(String.valueOf(messageSendEvent.getCouponTaskId()))
++                .topic(environment.resolvePlaceholders("one-coupon_distribution-service_coupon-execute-distribution_topic${unique-name:}"))
++                .sentTimeout(2000L)
++                .build();
++    }
++
++    @Override
++    protected Message<?> buildMessage(CouponTemplateDistributionEvent event, BaseSendExtendDTO requestParam) {
++        String keys = StrUtil.isEmpty(requestParam.getKeys()) ? UUID.randomUUID().toString() : requestParam.getKeys();
++        return MessageBuilder
++                .withPayload(new MessageWrapper(keys, event))
++                .setHeader(MessageConst.PROPERTY_KEYS, keys)
++                .setHeader(MessageConst.PROPERTY_TAGS, requestParam.getTag())
++                .build();
++    }
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/service/handler/excel/ReadExcelDistributionListener.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/service/handler/excel/ReadExcelDistributionListener.java
+index b238260..3491979 100644
+--- a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/service/handler/excel/ReadExcelDistributionListener.java
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/service/handler/excel/ReadExcelDistributionListener.java
+@@ -34,28 +34,30 @@
+ 
+ package com.nageoffer.onecoupon.distribution.service.handler.excel;
+ 
+-import cn.hutool.core.date.DateTime;
+-import cn.hutool.core.date.DateUtil;
++import cn.hutool.core.collection.ListUtil;
++import cn.hutool.core.lang.Singleton;
++import cn.hutool.core.map.MapUtil;
+ import cn.hutool.core.util.StrUtil;
+ import com.alibaba.excel.context.AnalysisContext;
+ import com.alibaba.excel.event.AnalysisEventListener;
+-import com.alibaba.fastjson2.JSON;
+-import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
++import com.alibaba.fastjson.JSON;
++import com.alibaba.fastjson.serializer.SerializerFeature;
++import com.nageoffer.onecoupon.distribution.common.constant.DistributionRedisConstant;
+ import com.nageoffer.onecoupon.distribution.common.constant.EngineRedisConstant;
+-import com.nageoffer.onecoupon.distribution.common.enums.CouponSourceEnum;
+-import com.nageoffer.onecoupon.distribution.common.enums.CouponStatusEnum;
+-import com.nageoffer.onecoupon.distribution.common.enums.CouponTaskStatusEnum;
+ import com.nageoffer.onecoupon.distribution.dao.entity.CouponTaskDO;
++import com.nageoffer.onecoupon.distribution.dao.entity.CouponTaskFailDO;
+ import com.nageoffer.onecoupon.distribution.dao.entity.CouponTemplateDO;
+-import com.nageoffer.onecoupon.distribution.dao.entity.UserCouponDO;
+-import com.nageoffer.onecoupon.distribution.dao.mapper.CouponTaskMapper;
+-import com.nageoffer.onecoupon.distribution.dao.mapper.CouponTemplateMapper;
+-import com.nageoffer.onecoupon.distribution.dao.mapper.UserCouponMapper;
++import com.nageoffer.onecoupon.distribution.dao.mapper.CouponTaskFailMapper;
++import com.nageoffer.onecoupon.distribution.mq.event.CouponTemplateDistributionEvent;
++import com.nageoffer.onecoupon.distribution.mq.producer.CouponExecuteDistributionProducer;
++import com.nageoffer.onecoupon.distribution.toolkit.StockDecrementReturnCombinedUtil;
+ import lombok.RequiredArgsConstructor;
+-import org.apache.ibatis.executor.BatchExecutorException;
++import org.springframework.core.io.ClassPathResource;
+ import org.springframework.data.redis.core.StringRedisTemplate;
++import org.springframework.data.redis.core.script.DefaultRedisScript;
++import org.springframework.scripting.support.ResourceScriptSource;
+ 
+-import java.util.Date;
++import java.util.Map;
+ 
+ /**
+  * 优惠券任务读取 Excel 分发监听器
+@@ -67,71 +69,107 @@ import java.util.Date;
+ @RequiredArgsConstructor
+ public class ReadExcelDistributionListener extends AnalysisEventListener<CouponTaskExcelObject> {
+ 
+-    private final Long couponTaskId;
++    private final CouponTaskDO couponTaskDO;
+     private final CouponTemplateDO couponTemplateDO;
++    private final CouponTaskFailMapper couponTaskFailMapper;
++
+     private final StringRedisTemplate stringRedisTemplate;
+-    private final CouponTemplateMapper couponTemplateMapper;
+-    private final UserCouponMapper userCouponMapper;
+-    private final CouponTaskMapper couponTaskMapper;
++    private final CouponExecuteDistributionProducer couponExecuteDistributionProducer;
++
++    private int rowCount = 1;
++    private final static String STOCK_DECREMENT_AND_BATCH_SAVE_USER_RECORD_LUA_PATH = "lua/stock_decrement_and_batch_save_user_record.lua";
++    private final static int BATCH_USER_COUPON_SIZE = 5000;
+ 
+     @Override
+     public void invoke(CouponTaskExcelObject data, AnalysisContext context) {
+-        // 通过缓存判断优惠券模板记录库存是否充足
++        Long couponTaskId = couponTaskDO.getId();
++
++        // 获取当前进度，判断是否已经执行过。如果已执行，则跳过即可，防止执行到一半应用宕机
++        String templateTaskExecuteProgressKey = String.format(DistributionRedisConstant.TEMPLATE_TASK_EXECUTE_PROGRESS_KEY, couponTaskId);
++        String progress = stringRedisTemplate.opsForValue().get(templateTaskExecuteProgressKey);
++        if (StrUtil.isNotBlank(progress) && Integer.parseInt(progress) >= rowCount) {
++            ++rowCount;
++            return;
++        }
++
++        // 获取 LUA 脚本，并保存到 Hutool 的单例管理容器，下次直接获取不需要加载
++        DefaultRedisScript<Long> buildLuaScript = Singleton.get(STOCK_DECREMENT_AND_BATCH_SAVE_USER_RECORD_LUA_PATH, () -> {
++            DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
++            redisScript.setScriptSource(new ResourceScriptSource(new ClassPathResource(STOCK_DECREMENT_AND_BATCH_SAVE_USER_RECORD_LUA_PATH)));
++            redisScript.setResultType(Long.class);
++            return redisScript;
++        });
++
++        // 执行 LUA 脚本进行扣减库存以及增加 Redis 用户领券记录
+         String couponTemplateKey = String.format(EngineRedisConstant.COUPON_TEMPLATE_KEY, couponTemplateDO.getId());
+-        Long stock = stringRedisTemplate.opsForHash().increment(couponTemplateKey, "stock", -1);
+-        if (stock < 0) {
+-            // 优惠券模板缓存库存不足扣减失败
++        String batchUserSetKey = String.format(DistributionRedisConstant.TEMPLATE_TASK_EXECUTE_BATCH_USER_KEY, couponTaskId);
++        Map<Object, Object> userRowNumMap = MapUtil.builder()
++                .put("userId", data.getUserId())
++                .put("rowNum", rowCount + 1)
++                .build();
++        Long combinedFiled = stringRedisTemplate.execute(buildLuaScript, ListUtil.of(couponTemplateKey, batchUserSetKey), JSON.toJSONString(userRowNumMap));
++
++        // firstField 为 false 说明优惠券已经没有库存了
++        boolean firstField = StockDecrementReturnCombinedUtil.extractFirstField(combinedFiled);
++        if (!firstField) {
++            // 同步当前执行进度到缓存
++            stringRedisTemplate.opsForValue().set(templateTaskExecuteProgressKey, String.valueOf(rowCount));
++            ++rowCount;
++
++            // 添加到 t_coupon_task_fail 并标记错误原因，方便后续查看未成功发送的原因和记录
++            Map<Object, Object> objectMap = MapUtil.builder()
++                    .put("rowNum", rowCount)
++                    .put("cause", "优惠券模板无库存")
++                    .build();
++            CouponTaskFailDO couponTaskFailDO = CouponTaskFailDO.builder()
++                    .batchId(couponTaskDO.getBatchId())
++                    .jsonObject(JSON.toJSONString(objectMap, SerializerFeature.WriteMapNullValue))
++                    .build();
++            couponTaskFailMapper.insert(couponTaskFailDO);
+             return;
+         }
+ 
+-        // 扣减优惠券模板库存，如果扣减成功，这里会返回 1，代表修改记录成功；否则返回 0，代表没有修改成功
+-        int decrementResult = couponTemplateMapper.decrementCouponTemplateStock(couponTemplateDO.getShopNumber(), couponTemplateDO.getId(), 1);
+-        if (!SqlHelper.retBool(decrementResult)) {
+-            // 优惠券模板数据库库存不足扣减失败
++        // 获取用户领券集合长度
++        int batchUserSetSize = StockDecrementReturnCombinedUtil.extractSecondField(combinedFiled.intValue());
++
++        // batchUserSetSize = BATCH_USER_COUPON_SIZE 时发送消息消费，不满足条件仅记录执行进度即可
++        if (batchUserSetSize < BATCH_USER_COUPON_SIZE) {
++            // 同步当前 Excel 执行进度到缓存
++            stringRedisTemplate.opsForValue().set(templateTaskExecuteProgressKey, String.valueOf(rowCount));
++            ++rowCount;
+             return;
+         }
+ 
+-        // 添加用户领券记录到数据库
+-        Date now = new Date();
+-        DateTime validEndTime = DateUtil.offsetHour(now, JSON.parseObject(couponTemplateDO.getConsumeRule()).getInteger("validityPeriod"));
+-        UserCouponDO userCouponDO = UserCouponDO.builder()
++        // 发送消息队列执行用户优惠券模板分发逻辑
++        CouponTemplateDistributionEvent couponTemplateDistributionEvent = CouponTemplateDistributionEvent.builder()
++                .couponTaskId(couponTaskId)
++                .shopNumber(couponTaskDO.getShopNumber())
+                 .couponTemplateId(couponTemplateDO.getId())
+-                .userId(Long.parseLong(data.getUserId()))
+-                .receiveTime(now)
+-                .receiveCount(1) // 代表第一次领取该优惠券
+-                .validStartTime(now)
+-                .validEndTime(validEndTime)
+-                .source(CouponSourceEnum.PLATFORM.getType())
+-                .status(CouponStatusEnum.EFFECTIVE.getType())
+-                .createTime(new Date())
+-                .updateTime(new Date())
+-                .delFlag(0)
++                .validEndTime(couponTemplateDO.getValidEndTime())
++                .couponTaskBatchId(couponTaskDO.getBatchId())
++                .couponTemplateConsumeRule(couponTemplateDO.getConsumeRule())
++                .batchUserSetSize(batchUserSetSize)
++                .distributionEndFlag(Boolean.FALSE)
+                 .build();
+-        try {
+-            userCouponMapper.insert(userCouponDO);
+-        } catch (BatchExecutorException bee) {
+-            // 用户已领取优惠券，会被唯一索引校验住，直接返回即可
+-            return;
+-        }
++        couponExecuteDistributionProducer.sendMessage(couponTemplateDistributionEvent);
+ 
+-        // 添加优惠券到用户已领取的 Redis 优惠券列表中
+-        String userCouponListCacheKey = String.format(EngineRedisConstant.USER_COUPON_TEMPLATE_LIST_KEY, data.getUserId());
+-        String userCouponItemCacheKey = StrUtil.builder()
+-                .append(couponTemplateDO.getId())
+-                .append("_")
+-                .append(userCouponDO.getId())
+-                .toString();
+-        stringRedisTemplate.opsForZSet().add(userCouponListCacheKey, userCouponItemCacheKey, now.getTime());
++        // 同步当前执行进度到缓存
++        stringRedisTemplate.opsForValue().set(templateTaskExecuteProgressKey, String.valueOf(rowCount));
++        ++rowCount;
+     }
+ 
+     @Override
+-    public void doAfterAllAnalysed(AnalysisContext analysisContext) {
+-        // 确保所有用户都已经接到优惠券后，设置优惠券推送任务完成时间
+-        CouponTaskDO couponTaskDO = CouponTaskDO.builder()
+-                .id(couponTaskId)
+-                .status(CouponTaskStatusEnum.SUCCESS.getStatus())
+-                .completionTime(new Date())
++    public void doAfterAllAnalysed(AnalysisContext context) {
++        // 发送 Excel 解析完成标识，即使不满足批量保存的数量也得保存到数据库
++        CouponTemplateDistributionEvent couponTemplateExecuteEvent = CouponTemplateDistributionEvent.builder()
++                .distributionEndFlag(Boolean.TRUE) // 设置解析完成标识
++                .shopNumber(couponTaskDO.getShopNumber())
++                .couponTemplateId(couponTemplateDO.getId())
++                .validEndTime(couponTemplateDO.getValidEndTime())
++                .couponTemplateConsumeRule(couponTemplateDO.getConsumeRule())
++                .couponTaskBatchId(couponTaskDO.getBatchId())
++                .couponTaskId(couponTaskDO.getId())
+                 .build();
+-        couponTaskMapper.updateById(couponTaskDO);
++        couponExecuteDistributionProducer.sendMessage(couponTemplateExecuteEvent);
+     }
+ }
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/service/handler/excel/UserCouponTaskFailExcelObject.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/service/handler/excel/UserCouponTaskFailExcelObject.java
+new file mode 100644
+index 0000000..5af176f
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/service/handler/excel/UserCouponTaskFailExcelObject.java
+@@ -0,0 +1,64 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.service.handler.excel;
++
++import com.alibaba.excel.annotation.ExcelProperty;
++import com.alibaba.excel.annotation.write.style.ColumnWidth;
++import lombok.AllArgsConstructor;
++import lombok.Builder;
++import lombok.Data;
++import lombok.NoArgsConstructor;
++
++/**
++ * 用户优惠券分发失败记录写入 Excel
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部沟通群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-14
++ */
++@Data
++@NoArgsConstructor
++@AllArgsConstructor
++@Builder
++public class UserCouponTaskFailExcelObject {
++
++    @ColumnWidth(20)
++    @ExcelProperty("行数")
++    private Integer rowNum;
++
++    @ColumnWidth(30)
++    @ExcelProperty("错误原因")
++    private String cause;
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/toolkit/StockDecrementReturnCombinedUtil.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/toolkit/StockDecrementReturnCombinedUtil.java
+new file mode 100644
+index 0000000..e5b8273
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/toolkit/StockDecrementReturnCombinedUtil.java
+@@ -0,0 +1,72 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.toolkit;
++
++/**
++ * 用户优惠券执行 LUA 脚本返回数据｜通过位移形式提高性能，是个小优化
++ * 因为预计每 5000 条记录保存次数据库，2^12 能表示 4096，所以这里采用了 2^13
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部沟通群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-15
++ */
++public class StockDecrementReturnCombinedUtil {
++
++    /**
++     * 2^13 > 5000, 所以用 13 位来表示第二个字段
++     */
++    private static final int SECOND_FIELD_BITS = 13;
++
++    /**
++     * 将两个字段组合成一个int
++     */
++    public static int combineFields(boolean decrementFlag, int userRecord) {
++        return (decrementFlag ? 1 : 0) << SECOND_FIELD_BITS | userRecord;
++    }
++
++    /**
++     * 从组合的int中提取第一个字段（0或1）
++     */
++    public static boolean extractFirstField(long combined) {
++        return (combined >> SECOND_FIELD_BITS) != 0;
++    }
++
++    /**
++     * 从组合的int中提取第二个字段（1到5000之间的数字）
++     */
++    public static int extractSecondField(int combined) {
++        return combined & ((1 << SECOND_FIELD_BITS) - 1);
++    }
++}
+diff --git a/distribution/src/main/resources/lua/batch_user_coupon_list.lua b/distribution/src/main/resources/lua/batch_user_coupon_list.lua
+new file mode 100644
+index 0000000..0b6c90b
+--- /dev/null
++++ b/distribution/src/main/resources/lua/batch_user_coupon_list.lua
+@@ -0,0 +1,21 @@
++-- 获取传递的参数
++local userIds = cjson.decode(ARGV[1])  -- 用户 ID 集合，JSON 格式的字符串
++local couponIds = cjson.decode(ARGV[2])  -- 优惠券 ID 集合，JSON 格式的字符串
++local userIdPrefix = KEYS[1]  -- 用户 ID 前缀（从 KEYS 获取）
++local limitKeyPrefix = KEYS[2]  -- 用户优惠券模板限制前缀
++local couponTemplateId = KEYS[3]  -- 优惠券模板 ID
++local currentTime = tonumber(ARGV[3])  -- 获取当前 Unix 时间戳（毫秒）
++local couponTemplateValidEndTime = tonumber(ARGV[4])  -- 优惠券模板到期时间
++
++-- 遍历用户 ID 集合
++for i, userId in ipairs(userIds) do
++    local key = userIdPrefix .. userId  -- 拼接用户 ID 前缀和用户 ID
++    local couponId = couponIds[i]  -- 获取对应的优惠券 ID
++    if couponId then
++        redis.call('ZADD', key, currentTime, couponId)  -- 添加优惠券 ID 到 ZSet 中
++
++        local limitKey = limitKeyPrefix .. userId .. '_' ..  couponTemplateId
++        redis.call('INCR', limitKey)  -- 添加用户和优惠券的领取次数，方便后续对用户进行领取次数前置限制
++        redis.call('EXPIRE', limitKey, couponTemplateValidEndTime)  -- 添加用户优惠券模板限制领取 Key 过期时间
++    end
++end
+diff --git a/distribution/src/main/resources/lua/stock_decrement_and_batch_save_user_record.lua b/distribution/src/main/resources/lua/stock_decrement_and_batch_save_user_record.lua
+new file mode 100644
+index 0000000..7a9b7f9
+--- /dev/null
++++ b/distribution/src/main/resources/lua/stock_decrement_and_batch_save_user_record.lua
+@@ -0,0 +1,33 @@
++-- 定义最大值和位数
++local SECOND_FIELD_BITS = 13
++
++-- 将两个字段组合成一个int
++local function combineFields(firstField, secondField)
++    local firstFieldValue = firstField and 1 or 0
++    return (firstFieldValue * 2 ^ SECOND_FIELD_BITS) + secondField
++end
++
++-- Lua脚本开始
++local key = KEYS[1] -- Redis Key
++local userSetKey = KEYS[2] -- 用户领券 Set 的 Key
++local userIdAndRowNum = ARGV[1] -- 用户 ID 和 Excel 所在行数
++
++-- 获取库存
++local stock = tonumber(redis.call('HGET', key, 'stock'))
++
++-- 检查库存是否大于0
++if stock == nil or stock <= 0 then
++    return combineFields(false, redis.call('SCARD', userSetKey))
++end
++
++-- 自减库存
++redis.call('HINCRBY', key, 'stock', -1)
++
++-- 添加用户到领券集合
++redis.call('SADD', userSetKey, userIdAndRowNum)
++
++-- 获取用户领券集合的长度
++local userSetLength = redis.call('SCARD', userSetKey)
++
++-- 返回结果
++return combineFields(true, userSetLength)
+diff --git a/distribution/src/main/resources/mapper/CourseTemplateMapper.xml b/distribution/src/main/resources/mapper/CourseTemplateMapper.xml
+index a0c9740..2907ab2 100644
+--- a/distribution/src/main/resources/mapper/CourseTemplateMapper.xml
++++ b/distribution/src/main/resources/mapper/CourseTemplateMapper.xml
+@@ -47,4 +47,12 @@
+           AND id = #{couponTemplateId}
+           AND stock >= #{decrementStock}
+     </update>
++
++    <!-- 回滚 MySQL 数据库优惠券库存余量，通过 MySQL 悲观行记录保障并发安全 -->
++    <update id="incrementCouponTemplateStock">
++        UPDATE t_coupon_template
++        SET stock = stock + #{incrementStock}
++        WHERE shop_number = #{shopNumber}
++          AND id = #{couponTemplateId}
++    </update>
+ </mapper>
+\ No newline at end of file
+diff --git a/distribution/src/test/java/com/nageoffer/onecoupon/distribution/toolkit/StockDecrementReturnCombinedUtilTests.java b/distribution/src/test/java/com/nageoffer/onecoupon/distribution/toolkit/StockDecrementReturnCombinedUtilTests.java
+new file mode 100644
+index 0000000..1f00ec6
+--- /dev/null
++++ b/distribution/src/test/java/com/nageoffer/onecoupon/distribution/toolkit/StockDecrementReturnCombinedUtilTests.java
+@@ -0,0 +1,80 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.toolkit;
++
++import cn.hutool.core.util.StrUtil;
++import lombok.extern.slf4j.Slf4j;
++import org.junit.jupiter.api.Test;
++
++/**
++ * 测试位移和字符串 split 速度，位移完胜
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部沟通群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-15
++ */
++@Slf4j
++public final class StockDecrementReturnCombinedUtilTests {
++
++    @Test
++    public void stockDecrementReturnCombinedUtilTest() {
++        boolean firstField = true;
++        int secondField = 5000;
++
++        int combined = StockDecrementReturnCombinedUtil.combineFields(firstField, secondField);
++
++        long startTime = System.currentTimeMillis();
++        for (int i = 0; i < 100000; i++) {
++            StockDecrementReturnCombinedUtil.extractFirstField(combined);
++            StockDecrementReturnCombinedUtil.extractSecondField(combined);
++        }
++        long endTime = System.currentTimeMillis();
++
++
++        long startTime2 = System.currentTimeMillis();
++        String str = "1,1234";
++        for (int i = 0; i < 100000; i++) {
++            StrUtil.split(str, ",");
++        }
++        long endTime2 = System.currentTimeMillis();
++
++        log.info("位移程序执行时间：{}", endTime - startTime);
++        log.info("split程序执行时间：{}", endTime2 - startTime2);
++        /**
++         * 位移程序执行时间：2
++         * split程序执行时间：40
++         */
++    }
++}

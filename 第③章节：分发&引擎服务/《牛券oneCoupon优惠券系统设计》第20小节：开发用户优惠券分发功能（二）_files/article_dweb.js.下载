@@ -1,0 +1,194 @@
+import { handleAudio } from './utils.js';
+
+// Tailwind延迟加载，不影响首屏渲染（非关键资源）
+(function loadTailwind() {
+  let placeholder = null;
+  
+  // 监听head变化，拦截Tailwind创建的style标签
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      mutation.addedNodes.forEach(function(node) {
+        // 检测到Tailwind的style标签
+        if (node.tagName === 'STYLE' && node.textContent.includes('tailwind')) {
+          // 移动到占位符位置（自定义CSS之前）
+          if (placeholder && placeholder.parentNode) {
+            placeholder.parentNode.insertBefore(node, placeholder);
+          }
+          observer.disconnect();
+        }
+      });
+    });
+  });
+  
+  observer.observe(document.head, { childList: true });
+  
+  function loadScript() {
+    let script = document.createElement('script');
+    script.src = './js/tailwind@3.4.1_typographytypography@0.5.10.js';
+    
+    script.onload = function() {
+      // Tailwind 脚本加载完成后,创建占位符
+      placeholder = document.createElement('script');
+      placeholder.id = 'tailwind-placeholder';
+      
+      // 插入到第一个 link[rel="stylesheet"] 之前
+      let firstStyleLink = document.querySelector('link[rel="stylesheet"]');
+      if (firstStyleLink && firstStyleLink.parentNode) {
+        firstStyleLink.parentNode.insertBefore(placeholder, firstStyleLink);
+      } else {
+        document.head.appendChild(placeholder);
+      }
+    };
+    
+    document.head.appendChild(script);
+  }
+  
+  // 只有当页面存在 .milkdown-editor 时才加载 Tailwind
+  if (document.querySelector('.milkdown-editor')) {
+    if (window.requestIdleCallback) {
+      requestIdleCallback(loadScript);
+    } else {
+      setTimeout(loadScript, 100);
+    }
+  }
+})();
+
+// set qrcode
+var url = document.getElementById('qrcode-url').innerHTML;
+var imgBase64 = jrQrcode.getQrBase64(url);
+document.getElementById('qrcode').src = imgBase64;
+// set logo
+function setImg() {
+  if (window.devicePixelRatio > 1) {
+    document
+      .getElementById('logo')
+      .setAttribute('src', './assets_dweb/logo@2x.png');
+  }
+}
+window.addEventListener('DOMContentLoaded', function () {
+  requestAnimationFrame(function() {
+    setImg();
+    isMilkdown();
+    handleAudio();
+  });
+});
+
+// window.addEventListener('load', function () {
+//   requestAnimationFrame(function() {
+//     // 预留用于需要等待资源加载完成的逻辑
+//   });
+// });
+
+(function initImagePreview() {
+  const editor = document.querySelector('.milkdown-editor');
+  const contentContainer = editor ? document.querySelector('.milkdown-preview') : document.querySelector('.content');
+  if (!contentContainer) return;
+  
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9999;display:none;justify-content:center;align-items:center;cursor:zoom-out;';
+  
+  const img = document.createElement('img');
+  img.style.cssText = 'max-width:95%;max-height:95vh;object-fit:contain;transition:opacity 0.2s;';
+  
+  overlay.appendChild(img);
+  document.body.appendChild(overlay);
+  
+  function closePreview() {
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  
+  overlay.addEventListener('click', closePreview);
+  
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && overlay.style.display === 'flex') {
+      closePreview();
+    }
+  });
+  
+  contentContainer.addEventListener('click', function(event) {
+    const target = event.target;
+    if (target.tagName === 'IMG') {
+      img.style.opacity = '0';
+      img.src = target.src;
+      
+      img.onload = function() {
+        // 获取原图尺寸
+        const naturalWidth = img.naturalWidth;
+        const naturalHeight = img.naturalHeight;
+        
+        // 放大1.5倍，但不超过屏幕95%
+        let scale = 1.5;
+        const maxWidth = window.innerWidth * 0.95;
+        const maxHeight = window.innerHeight * 0.95;
+        
+        const scaledWidth = naturalWidth * scale;
+        const scaledHeight = naturalHeight * scale;
+        
+        // 如果放大后超出屏幕，按比例缩小
+        if (scaledWidth > maxWidth || scaledHeight > maxHeight) {
+          const widthRatio = maxWidth / scaledWidth;
+          const heightRatio = maxHeight / scaledHeight;
+          scale = Math.min(widthRatio, heightRatio) * scale;
+        }
+        
+        img.style.width = naturalWidth + 'px';
+        img.style.height = naturalHeight + 'px';
+        img.style.transform = 'scale(' + scale + ')';
+        img.style.opacity = '1';
+      };
+      
+      overlay.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+  });
+})();
+
+
+// set style
+var time = document.getElementById('article-date').innerHTML;
+var articleTime = new Date(
+  time.replace('年', '-').replace('月', '-').replace('日', '').replace(/-/g, '/')
+).getTime();
+if (articleTime > 1589990400000) {
+  var new_element = document.createElement('style');
+  new_element.innerHTML =
+    '.content img.fr-dib {margin:5px auto;display:block;float:none}' +
+    '.content img.fr-dib.fr-fil {margin-left:0;text-align:left}' +
+    '.content img.fr-dib.fr-fir {margin-right:0;text-algin:right}';
+  document.body.appendChild(new_element);
+}
+
+var messageTimer = null
+function message(content) {
+  var container = document.querySelector('.message-container-overlay');
+  container.innerHTML = '<div class="message-item">' + content + '</div>';
+  clearTimeout(messageTimer)
+  messageTimer = setTimeout(function () {
+    container.innerHTML = '';
+  }, 1500)
+}
+
+function isMilkdown() {
+  const editor = document.querySelector('.milkdown-editor');
+  if (editor) {
+    const qlSnow = document.querySelector('.ql-snow');
+    if (qlSnow) {
+      qlSnow.style.display = 'none';
+    }
+  } else {
+    const milkdownPreview = document.querySelector('.milkdown-preview');
+    const container = document.querySelector('.quill-editor');
+    const titleDom = document.querySelector('.title-mark');
+    
+    if (milkdownPreview) {
+      milkdownPreview.style.display = 'none';
+    }
+    if (container) {
+      container.classList.remove('dark:!bg-[#20242A]');
+    }
+    if (titleDom) {
+      titleDom.classList.remove('dark:!text-slate-300');
+    }
+  }
+}

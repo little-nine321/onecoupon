@@ -1,0 +1,902 @@
+﻿diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/common/constant/EngineRedisConstant.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/common/constant/EngineRedisConstant.java
+index e768bda..8b5596a 100644
+--- a/engine/src/main/java/com/nageoffer/onecoupon/engine/common/constant/EngineRedisConstant.java
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/common/constant/EngineRedisConstant.java
+@@ -72,4 +72,9 @@ public final class EngineRedisConstant {
+      * 检查用户是否已提醒 Key
+      */
+     public static final String COUPON_REMIND_CHECK_KEY = "one-coupon_engine:coupon-remind-check:%s_%s_%d_%d";
++
++    /**
++     * 用户预约提醒信息 Key
++     */
++    public static final String USER_COUPON_TEMPLATE_REMIND_INFORMATION = "one-coupon_engine:coupon-remind-information:%s";
+ }
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/controller/CouponTemplateRemindController.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/controller/CouponTemplateRemindController.java
+index 52ba9b9..ccbde69 100644
+--- a/engine/src/main/java/com/nageoffer/onecoupon/engine/controller/CouponTemplateRemindController.java
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/controller/CouponTemplateRemindController.java
+@@ -34,7 +34,11 @@
+ 
+ package com.nageoffer.onecoupon.engine.controller;
+ 
++import com.nageoffer.onecoupon.engine.common.context.UserContext;
++import com.nageoffer.onecoupon.engine.dto.req.CouponTemplateRemindCancelReqDTO;
+ import com.nageoffer.onecoupon.engine.dto.req.CouponTemplateRemindCreateReqDTO;
++import com.nageoffer.onecoupon.engine.dto.req.CouponTemplateRemindQueryReqDTO;
++import com.nageoffer.onecoupon.engine.dto.resp.CouponTemplateRemindQueryRespDTO;
+ import com.nageoffer.onecoupon.engine.service.CouponTemplateRemindService;
+ import com.nageoffer.onecoupon.framework.idempotent.NoDuplicateSubmit;
+ import com.nageoffer.onecoupon.framework.result.Result;
+@@ -42,10 +46,13 @@ import com.nageoffer.onecoupon.framework.web.Results;
+ import io.swagger.v3.oas.annotations.Operation;
+ import io.swagger.v3.oas.annotations.tags.Tag;
+ import lombok.RequiredArgsConstructor;
++import org.springframework.web.bind.annotation.GetMapping;
+ import org.springframework.web.bind.annotation.PostMapping;
+ import org.springframework.web.bind.annotation.RequestBody;
+ import org.springframework.web.bind.annotation.RestController;
+ 
++import java.util.List;
++
+ /**
+  * 优惠券模板控制层
+  * <p>
+@@ -67,4 +74,18 @@ public class CouponTemplateRemindController {
+         couponTemplateRemindService.createCouponRemind(requestParam);
+         return Results.success();
+     }
++
++    @Operation(summary = "查询优惠券预约提醒")
++    @GetMapping("/api/engine/coupon-template-remind/list")
++    public Result<List<CouponTemplateRemindQueryRespDTO>> listCouponRemind() {
++        return Results.success(couponTemplateRemindService.listCouponRemind(new CouponTemplateRemindQueryReqDTO(UserContext.getUserId())));
++    }
++
++    @Operation(summary = "取消优惠券预约提醒")
++    @NoDuplicateSubmit(message = "请勿短时间内重复提交取消预约提醒请求")
++    @PostMapping("/api/engine/coupon-template-remind/cancel")
++    public Result<Void> cancelCouponRemind(@RequestBody CouponTemplateRemindCancelReqDTO requestParam) {
++        couponTemplateRemindService.cancelCouponRemind(requestParam);
++        return Results.success();
++    }
+ }
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/dao/sharding/DBHashModShardingAlgorithm.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/dao/sharding/DBHashModShardingAlgorithm.java
+index 1843ba4..eb0a2f0 100644
+--- a/engine/src/main/java/com/nageoffer/onecoupon/engine/dao/sharding/DBHashModShardingAlgorithm.java
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/dao/sharding/DBHashModShardingAlgorithm.java
+@@ -35,6 +35,7 @@
+ package com.nageoffer.onecoupon.engine.dao.sharding;
+ 
+ import cn.hutool.core.lang.Singleton;
++import cn.hutool.core.util.StrUtil;
+ import lombok.Getter;
+ import org.apache.shardingsphere.infra.util.exception.ShardingSpherePreconditions;
+ import org.apache.shardingsphere.sharding.api.sharding.standard.PreciseShardingValue;
+@@ -44,6 +45,7 @@ import org.apache.shardingsphere.sharding.exception.algorithm.sharding.ShardingA
+ 
+ import java.util.Collection;
+ import java.util.List;
++import java.util.Objects;
+ import java.util.Properties;
+ 
+ /**
+@@ -86,7 +88,10 @@ public final class DBHashModShardingAlgorithm implements StandardShardingAlgorit
+     public void init(Properties props) {
+         this.props = props;
+         shardingCount = getShardingCount(props);
+-        Singleton.put(this);
++        Object businessTag = props.get("business-tag");
++        if (Objects.nonNull(businessTag) && StrUtil.isNotBlank(businessTag.toString())) {
++            Singleton.put(businessTag.toString(), this);
++        }
+     }
+ 
+     private int getShardingCount(final Properties props) {
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/dao/sharding/DBShardingUtil.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/dao/sharding/DBShardingUtil.java
+new file mode 100644
+index 0000000..3d1919a
+--- /dev/null
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/dao/sharding/DBShardingUtil.java
+@@ -0,0 +1,75 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.engine.dao.sharding;
++
++import cn.hutool.core.lang.Singleton;
++
++import java.util.Collection;
++import java.util.List;
++
++/**
++ * 针对项目中 IN 操作跨数据库场景进行拆分数据源
++ * <p>
++ * 作者：优雅
++ * 加项目群：早加入就是优势！500人内部沟通群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-27
++ */
++public final class DBShardingUtil {
++
++    /**
++     * 获取数据库分片算法类，在该类初始化时向 Singleton 放入实例
++     */
++    private static final DBHashModShardingAlgorithm COUPON_TEMPLATE_DB_SHARDING_ALGORITHM = Singleton.get(
++            "coupon-template",
++            DBHashModShardingAlgorithm.class
++    );
++
++    /**
++     * 解决查询商家优惠券 IN 场景跨库表不存在问题
++     *
++     * @param shopNumber 分片键 shopNumber
++     * @return 返回 shopNumber 所在的数据源
++     */
++    public static int doCouponSharding(Long shopNumber) {
++        return COUPON_TEMPLATE_DB_SHARDING_ALGORITHM.getShardingMod(shopNumber, getAvailableDatabases().size());
++    }
++
++    /**
++     * 获取可用的数据源列表
++     */
++    private static Collection<String> getAvailableDatabases() {
++        return List.of("ds0", "ds1");
++    }
++}
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/dto/req/CouponTemplateRemindCancelReqDTO.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/dto/req/CouponTemplateRemindCancelReqDTO.java
+new file mode 100644
+index 0000000..e9953e2
+--- /dev/null
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/dto/req/CouponTemplateRemindCancelReqDTO.java
+@@ -0,0 +1,74 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.engine.dto.req;
++
++import io.swagger.v3.oas.annotations.media.Schema;
++import lombok.Data;
++
++/**
++ * 取消抢券预约提醒接口请求参数实体
++ * <p>
++ * 作者：优雅
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-18
++ */
++@Data
++@Schema(description = "取消优惠券预约抢券提醒参数实体")
++public class CouponTemplateRemindCancelReqDTO {
++
++    /**
++     * 店铺编号
++     */
++    @Schema(description = "店铺编号", example = "1810714735922956666", required = true)
++    private String shopNumber;
++
++    /**
++     * 优惠券模板id
++     */
++    @Schema(description = "优惠券模板id", example = "1810966706881941507", required = true)
++    private String couponTemplateId;
++
++    /**
++     * 提醒时间，比如五分钟，十分钟，十五分钟
++     */
++    @Schema(description = "提醒时间", example = "15")
++    private Integer remindTime;
++
++    /**
++     * 提醒方式
++     */
++    @Schema(description = "提醒方式", example = "0", required = true)
++    private Integer type;
++}
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/dto/req/CouponTemplateRemindQueryReqDTO.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/dto/req/CouponTemplateRemindQueryReqDTO.java
+new file mode 100644
+index 0000000..921f785
+--- /dev/null
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/dto/req/CouponTemplateRemindQueryReqDTO.java
+@@ -0,0 +1,60 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.engine.dto.req;
++
++import io.swagger.v3.oas.annotations.media.Schema;
++import lombok.AllArgsConstructor;
++import lombok.Data;
++import lombok.NoArgsConstructor;
++
++/**
++ * 查询抢券预约提醒接口请求参数实体
++ * <p>
++ * 作者：优雅
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-16
++ */
++@Data
++@NoArgsConstructor
++@AllArgsConstructor
++@Schema(description = "查询优惠券预约抢券提醒参数实体")
++public class CouponTemplateRemindQueryReqDTO {
++
++    /**
++     * 用户id
++     */
++    @Schema(description = "用户id", example = "1810518709471555585", required = true)
++    private String userId;
++}
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/dto/resp/CouponTemplateRemindQueryRespDTO.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/dto/resp/CouponTemplateRemindQueryRespDTO.java
+new file mode 100644
+index 0000000..894a3f9
+--- /dev/null
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/dto/resp/CouponTemplateRemindQueryRespDTO.java
+@@ -0,0 +1,136 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.engine.dto.resp;
++
++
++import com.fasterxml.jackson.annotation.JsonFormat;
++import io.swagger.v3.oas.annotations.media.Schema;
++import lombok.Data;
++
++import java.util.Date;
++import java.util.List;
++
++/**
++ * 查询优惠券预约抢券提醒返回实体
++ * <p>
++ * 作者：优雅
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-16
++ */
++@Data
++@Schema(description = "查询优惠券预约抢券提醒返回实体")
++public class CouponTemplateRemindQueryRespDTO {
++
++    /**
++     * id
++     */
++    @Schema(description = "优惠券id")
++    private Long id;
++
++    /**
++     * 店铺编号
++     */
++    @Schema(description = "店铺编号")
++    private Long shopNumber;
++
++    /**
++     * 优惠券名称
++     */
++    @Schema(description = "优惠券名称")
++    private String name;
++
++    /**
++     * 优惠券来源 0：店铺券 1：平台券
++     */
++    @Schema(description = "优惠券来源 0：店铺券 1：平台券")
++    private Integer source;
++
++    /**
++     * 优惠对象 0：商品专属 1：全店通用
++     */
++    @Schema(description = "优惠对象 0：商品专属 1：全店通用")
++    private Integer target;
++
++    /**
++     * 优惠商品编码
++     */
++    @Schema(description = "优惠商品编码")
++    private String goods;
++
++    /**
++     * 优惠类型 0：立减券 1：满减券 2：折扣券
++     */
++    @Schema(description = "优惠类型 0：立减券 1：满减券 2：折扣券")
++    private Integer type;
++
++    /**
++     * 有效期开始时间
++     */
++    @Schema(description = "有效期开始时间")
++    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
++    private Date validStartTime;
++
++    /**
++     * 有效期结束时间
++     */
++    @Schema(description = "有效期结束时间")
++    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
++    private Date validEndTime;
++
++    /**
++     * 领取规则
++     */
++    @Schema(description = "领取规则")
++    private String receiveRule;
++
++    /**
++     * 消耗规则
++     */
++    @Schema(description = "消耗规则")
++    private String consumeRule;
++
++
++    /**
++     * 提醒的时间，和提醒类型按照顺序一一对应
++     */
++    @Schema(description = "预约的时间")
++    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
++    private List<Date> remindTime;
++
++    /**
++     * 提醒类型，和提醒时间按照顺序一一对应
++     */
++    private List<String> remindType;
++}
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/service/CouponTemplateRemindService.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/service/CouponTemplateRemindService.java
+index 913f3a7..d898841 100644
+--- a/engine/src/main/java/com/nageoffer/onecoupon/engine/service/CouponTemplateRemindService.java
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/service/CouponTemplateRemindService.java
+@@ -36,7 +36,13 @@ package com.nageoffer.onecoupon.engine.service;
+ 
+ import com.baomidou.mybatisplus.extension.service.IService;
+ import com.nageoffer.onecoupon.engine.dao.entity.CouponTemplateRemindDO;
++import com.nageoffer.onecoupon.engine.dto.req.CouponTemplateRemindCancelReqDTO;
+ import com.nageoffer.onecoupon.engine.dto.req.CouponTemplateRemindCreateReqDTO;
++import com.nageoffer.onecoupon.engine.dto.req.CouponTemplateRemindQueryReqDTO;
++import com.nageoffer.onecoupon.engine.dto.resp.CouponTemplateRemindQueryRespDTO;
++import com.nageoffer.onecoupon.engine.service.handler.remind.dto.CouponTemplateRemindDTO;
++
++import java.util.List;
+ 
+ /**
+  * 优惠券预约提醒业务逻辑层
+@@ -53,4 +59,25 @@ public interface CouponTemplateRemindService extends IService<CouponTemplateRemi
+      * @param requestParam 请求参数
+      */
+     void createCouponRemind(CouponTemplateRemindCreateReqDTO requestParam);
++
++    /**
++     * 分页查询抢券预约提醒
++     *
++     * @param requestParam 请求参数
++     */
++    List<CouponTemplateRemindQueryRespDTO> listCouponRemind(CouponTemplateRemindQueryReqDTO requestParam);
++
++    /**
++     * 取消抢券预约提醒
++     *
++     * @param requestParam 请求参数
++     */
++    void cancelCouponRemind(CouponTemplateRemindCancelReqDTO requestParam);
++
++    /**
++     * 检查是否取消抢券预约提醒
++     *
++     * @param requestParam 请求参数
++     */
++    boolean isCancelRemind(CouponTemplateRemindDTO requestParam);
+ }
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/service/CouponTemplateService.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/service/CouponTemplateService.java
+index 13aa614..0efbbac 100644
+--- a/engine/src/main/java/com/nageoffer/onecoupon/engine/service/CouponTemplateService.java
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/service/CouponTemplateService.java
+@@ -39,6 +39,8 @@ import com.nageoffer.onecoupon.engine.dao.entity.CouponTemplateDO;
+ import com.nageoffer.onecoupon.engine.dto.req.CouponTemplateQueryReqDTO;
+ import com.nageoffer.onecoupon.engine.dto.resp.CouponTemplateQueryRespDTO;
+ 
++import java.util.List;
++
+ /**
+  * 优惠券模板业务逻辑层
+  * <p>
+@@ -55,4 +57,11 @@ public interface CouponTemplateService extends IService<CouponTemplateDO> {
+      * @return 优惠券模板信息
+      */
+     CouponTemplateQueryRespDTO findCouponTemplate(CouponTemplateQueryReqDTO requestParam);
++
++    /**
++     * 根据优惠券id集合查询出券信息
++     *
++     * @param couponTemplateIds 优惠券id集合
++     */
++    List<CouponTemplateDO> listCouponTemplateByIds(List<Long> couponTemplateIds, List<Long> shopNumbers);
+ }
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/service/handler/remind/CouponTemplateRemindExecutor.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/service/handler/remind/CouponTemplateRemindExecutor.java
+index f904982..afa04c5 100644
+--- a/engine/src/main/java/com/nageoffer/onecoupon/engine/service/handler/remind/CouponTemplateRemindExecutor.java
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/service/handler/remind/CouponTemplateRemindExecutor.java
+@@ -39,6 +39,7 @@ import com.alibaba.fastjson2.JSON;
+ import com.nageoffer.onecoupon.engine.common.enums.CouponRemindTypeEnum;
+ import com.nageoffer.onecoupon.engine.mq.event.CouponTemplateRemindDelayEvent;
+ import com.nageoffer.onecoupon.engine.mq.producer.CouponTemplateRemindDelayProducer;
++import com.nageoffer.onecoupon.engine.service.CouponTemplateRemindService;
+ import com.nageoffer.onecoupon.engine.service.handler.remind.dto.CouponTemplateRemindDTO;
+ import com.nageoffer.onecoupon.engine.service.handler.remind.impl.SendAppMessageRemindCouponTemplate;
+ import com.nageoffer.onecoupon.engine.service.handler.remind.impl.SendEmailRemindCouponTemplate;
+@@ -67,10 +68,12 @@ import static com.nageoffer.onecoupon.engine.common.constant.EngineRedisConstant
+  * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
+  * 开发时间：2024-07-18
+  */
++@Slf4j
+ @Component
+ @RequiredArgsConstructor
+ public class CouponTemplateRemindExecutor {
+ 
++    private final CouponTemplateRemindService couponTemplateRemindService;
+     private final SendEmailRemindCouponTemplate sendEmailRemindCouponTemplate;
+     private final SendAppMessageRemindCouponTemplate sendAppMessageRemindCouponTemplate;
+ 
+@@ -94,6 +97,12 @@ public class CouponTemplateRemindExecutor {
+      * @param couponTemplateRemindDTO 用户预约提醒请求信息
+      */
+     public void executeRemindCouponTemplate(CouponTemplateRemindDTO couponTemplateRemindDTO) {
++        // 用户没取消预约，则发出提醒
++        if (couponTemplateRemindService.isCancelRemind(couponTemplateRemindDTO)) {
++            log.info("用户已取消优惠券预约提醒，参数：{}", JSON.toJSONString(couponTemplateRemindDTO));
++            return;
++        }
++
+         // 假设刚把消息提交到线程池，突然应用宕机了，我们通过延迟队列进行兜底 Refresh
+         RBlockingDeque<String> blockingDeque = redissonClient.getBlockingDeque(REDIS_BLOCKING_DEQUE);
+         RDelayedQueue<String> delayedQueue = redissonClient.getDelayedQueue(blockingDeque);
+@@ -102,7 +111,6 @@ public class CouponTemplateRemindExecutor {
+         delayedQueue.offer(key, 10, TimeUnit.SECONDS);
+ 
+         executorService.execute(() -> {
+-            // 用户没取消预约，则发出提醒
+             // 向用户发起消息提醒
+             switch (Objects.requireNonNull(CouponRemindTypeEnum.getByType(couponTemplateRemindDTO.getType()))) {
+                 case APP -> sendAppMessageRemindCouponTemplate.remind(couponTemplateRemindDTO);
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/service/impl/CouponTemplateServiceImpl.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/service/impl/CouponTemplateServiceImpl.java
+index 321a8aa..d16d61a 100644
+--- a/engine/src/main/java/com/nageoffer/onecoupon/engine/service/impl/CouponTemplateServiceImpl.java
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/service/impl/CouponTemplateServiceImpl.java
+@@ -44,6 +44,7 @@ import com.nageoffer.onecoupon.engine.common.constant.EngineRedisConstant;
+ import com.nageoffer.onecoupon.engine.common.enums.CouponTemplateStatusEnum;
+ import com.nageoffer.onecoupon.engine.dao.entity.CouponTemplateDO;
+ import com.nageoffer.onecoupon.engine.dao.mapper.CouponTemplateMapper;
++import com.nageoffer.onecoupon.engine.dao.sharding.DBShardingUtil;
+ import com.nageoffer.onecoupon.engine.dto.req.CouponTemplateQueryReqDTO;
+ import com.nageoffer.onecoupon.engine.dto.resp.CouponTemplateQueryRespDTO;
+ import com.nageoffer.onecoupon.engine.service.CouponTemplateService;
+@@ -59,6 +60,7 @@ import org.springframework.stereotype.Service;
+ 
+ import java.util.ArrayList;
+ import java.util.Collections;
++import java.util.HashMap;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.concurrent.TimeUnit;
+@@ -169,6 +171,45 @@ public class CouponTemplateServiceImpl extends ServiceImpl<CouponTemplateMapper,
+         return BeanUtil.mapToBean(couponTemplateCacheMap, CouponTemplateQueryRespDTO.class, false, CopyOptions.create());
+     }
+ 
++
++    @Override
++    public List<CouponTemplateDO> listCouponTemplateByIds(List<Long> couponTemplateIds, List<Long> shopNumbers) {
++        // 1. 将 shopNumbers集合 对应的index拆分到数据库中
++        Map<Integer, List<Long>> databaseIndexMap = splitIndexByDatabase(shopNumbers);
++
++        List<CouponTemplateDO> result = new ArrayList<>();
++        // 2. 对每个数据库执行查询
++        for (Map.Entry<Integer, List<Long>> entry : databaseIndexMap.entrySet()) {
++            List<Long> shopNumbersSubset = entry.getValue();
++
++            // 执行查询
++            List<CouponTemplateDO> couponTemplateDOList = queryDatabase(couponTemplateIds, shopNumbersSubset);
++            result.addAll(couponTemplateDOList);
++        }
++
++        return result;
++    }
++
++    private List<CouponTemplateDO> queryDatabase(List<Long> couponTemplateIds, List<Long> shopNumbers) {
++        LambdaQueryWrapper<CouponTemplateDO> queryWrapper = Wrappers.lambdaQuery(CouponTemplateDO.class)
++                .in(CouponTemplateDO::getShopNumber, shopNumbers)
++                .in(CouponTemplateDO::getId, couponTemplateIds);
++        return couponTemplateMapper.selectList(queryWrapper);
++    }
++
++    private Map<Integer, List<Long>> splitIndexByDatabase(List<Long> shopNumbers) {
++        Map<Integer, List<Long>> databaseShopNumberMap = new HashMap<>();
++
++        for (Long shopNumber : shopNumbers) {
++            int databaseMod = DBShardingUtil.doCouponSharding(shopNumber);
++            databaseShopNumberMap
++                    .computeIfAbsent(databaseMod, k -> new ArrayList<>())
++                    .add(shopNumber);
++        }
++
++        return databaseShopNumberMap;
++    }
++
+     /**
+      * 缓存击穿解决方案
+      */
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/service/impl/CouponTemplateServiceRemindImpl.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/service/impl/CouponTemplateServiceRemindImpl.java
+index 02ec02c..c1b9d7b 100644
+--- a/engine/src/main/java/com/nageoffer/onecoupon/engine/service/impl/CouponTemplateServiceRemindImpl.java
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/service/impl/CouponTemplateServiceRemindImpl.java
+@@ -35,26 +35,43 @@
+ package com.nageoffer.onecoupon.engine.service.impl;
+ 
+ import cn.hutool.core.bean.BeanUtil;
++import cn.hutool.core.collection.CollUtil;
+ import cn.hutool.core.date.DateUtil;
++import com.alibaba.fastjson2.JSON;
+ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+ import com.nageoffer.onecoupon.engine.common.context.UserContext;
++import com.nageoffer.onecoupon.engine.dao.entity.CouponTemplateDO;
+ import com.nageoffer.onecoupon.engine.dao.entity.CouponTemplateRemindDO;
+ import com.nageoffer.onecoupon.engine.dao.mapper.CouponTemplateRemindMapper;
+ import com.nageoffer.onecoupon.engine.dto.req.CouponTemplateQueryReqDTO;
++import com.nageoffer.onecoupon.engine.dto.req.CouponTemplateRemindCancelReqDTO;
+ import com.nageoffer.onecoupon.engine.dto.req.CouponTemplateRemindCreateReqDTO;
++import com.nageoffer.onecoupon.engine.dto.req.CouponTemplateRemindQueryReqDTO;
+ import com.nageoffer.onecoupon.engine.dto.resp.CouponTemplateQueryRespDTO;
++import com.nageoffer.onecoupon.engine.dto.resp.CouponTemplateRemindQueryRespDTO;
+ import com.nageoffer.onecoupon.engine.mq.event.CouponTemplateRemindDelayEvent;
+ import com.nageoffer.onecoupon.engine.mq.producer.CouponTemplateRemindDelayProducer;
+ import com.nageoffer.onecoupon.engine.service.CouponTemplateRemindService;
+ import com.nageoffer.onecoupon.engine.service.CouponTemplateService;
++import com.nageoffer.onecoupon.engine.service.handler.remind.dto.CouponTemplateRemindDTO;
+ import com.nageoffer.onecoupon.engine.toolkit.CouponTemplateRemindUtil;
+ import com.nageoffer.onecoupon.framework.exception.ClientException;
+ import lombok.RequiredArgsConstructor;
++import org.redisson.api.RBloomFilter;
++import org.springframework.data.redis.core.StringRedisTemplate;
+ import org.springframework.stereotype.Service;
+ import org.springframework.transaction.annotation.Transactional;
+ 
++import java.util.ArrayList;
++import java.util.Date;
++import java.util.List;
++import java.util.Objects;
++import java.util.concurrent.TimeUnit;
++
++import static com.nageoffer.onecoupon.engine.common.constant.EngineRedisConstant.USER_COUPON_TEMPLATE_REMIND_INFORMATION;
++
+ /**
+  * 优惠券预约提醒业务逻辑实现层
+  * <p>
+@@ -68,7 +85,9 @@ public class CouponTemplateServiceRemindImpl extends ServiceImpl<CouponTemplateR
+ 
+     private final CouponTemplateRemindMapper couponTemplateRemindMapper;
+     private final CouponTemplateService couponTemplateService;
++    private final RBloomFilter<String> cancelRemindBloomFilter;
+     private final CouponTemplateRemindDelayProducer couponRemindDelayProducer;
++    private final StringRedisTemplate stringRedisTemplate;
+ 
+     @Override
+     @Transactional
+@@ -76,6 +95,9 @@ public class CouponTemplateServiceRemindImpl extends ServiceImpl<CouponTemplateR
+         // 验证优惠券是否存在，避免缓存穿透问题并获取优惠券开抢时间
+         CouponTemplateQueryRespDTO couponTemplate = couponTemplateService
+                 .findCouponTemplate(new CouponTemplateQueryReqDTO(requestParam.getShopNumber(), requestParam.getCouponTemplateId()));
++        if (couponTemplate.getValidStartTime().before(new Date())) {
++            throw new ClientException("无法预约已开始领取的优惠券");
++        }
+ 
+         // 查询用户是否已经预约过优惠券的提醒信息
+         LambdaQueryWrapper<CouponTemplateRemindDO> queryWrapper = Wrappers.lambdaQuery(CouponTemplateRemindDO.class)
+@@ -116,5 +138,121 @@ public class CouponTemplateServiceRemindImpl extends ServiceImpl<CouponTemplateR
+                 .delayTime(DateUtil.offsetMinute(couponTemplate.getValidStartTime(), -requestParam.getRemindTime()).getTime())
+                 .build();
+         couponRemindDelayProducer.sendMessage(couponTemplateRemindDelayEvent);
++
++        // 删除用户预约提醒的缓存信息，通过更新数据库删除缓存策略保障数据库和缓存一致性
++        stringRedisTemplate.delete(String.format(USER_COUPON_TEMPLATE_REMIND_INFORMATION, UserContext.getUserId()));
++    }
++
++    @Override
++    public List<CouponTemplateRemindQueryRespDTO> listCouponRemind(CouponTemplateRemindQueryReqDTO requestParam) {
++        String value = stringRedisTemplate.opsForValue().get(String.format(USER_COUPON_TEMPLATE_REMIND_INFORMATION, requestParam.getUserId()));
++        if (value != null) {
++            return JSON.parseArray(value, CouponTemplateRemindQueryRespDTO.class);
++        }
++
++        // 查出用户预约的信息
++        LambdaQueryWrapper<CouponTemplateRemindDO> queryWrapper = Wrappers.lambdaQuery(CouponTemplateRemindDO.class)
++                .eq(CouponTemplateRemindDO::getUserId, requestParam.getUserId());
++        List<CouponTemplateRemindDO> couponTemplateRemindDOlist = couponTemplateRemindMapper.selectList(queryWrapper);
++        if (CollUtil.isEmpty(couponTemplateRemindDOlist))
++            return new ArrayList<>();
++
++        // 根据优惠券 ID 查询优惠券信息
++        List<Long> couponIds = couponTemplateRemindDOlist.stream()
++                .map(CouponTemplateRemindDO::getCouponTemplateId)
++                .toList();
++        List<Long> shopNumbers = couponTemplateRemindDOlist.stream()
++                .map(CouponTemplateRemindDO::getShopNumber)
++                .toList();
++        List<CouponTemplateDO> couponTemplateDOList = couponTemplateService.listCouponTemplateByIds(couponIds, shopNumbers);
++        List<CouponTemplateRemindQueryRespDTO> actualResult = BeanUtil.copyToList(couponTemplateDOList, CouponTemplateRemindQueryRespDTO.class);
++
++        // 填充响应结果的其它信息
++        actualResult.forEach(each -> {
++            // 找到当前优惠券对应的预约提醒信息
++            couponTemplateRemindDOlist.stream()
++                    .filter(i -> i.getCouponTemplateId().equals(each.getId()))
++                    .findFirst()
++                    .ifPresent(i -> {
++                        // 解析并填充预约提醒信息
++                        CouponTemplateRemindUtil.fillRemindInformation(each, i.getInformation());
++                    });
++        });
++
++        stringRedisTemplate.opsForValue().set(String.format(USER_COUPON_TEMPLATE_REMIND_INFORMATION, requestParam.getUserId()), JSON.toJSONString(actualResult), 1, TimeUnit.MINUTES);
++        return actualResult;
++    }
++
++    @Override
++    @Transactional
++    public void cancelCouponRemind(CouponTemplateRemindCancelReqDTO requestParam) {
++        // 验证优惠券是否存在，避免缓存穿透问题并获取优惠券开抢时间
++        CouponTemplateQueryRespDTO couponTemplate = couponTemplateService
++                .findCouponTemplate(new CouponTemplateQueryReqDTO(requestParam.getShopNumber(), requestParam.getCouponTemplateId()));
++        if (couponTemplate.getValidStartTime().before(new Date())) {
++            throw new ClientException("无法取消已开始领取的优惠券预约");
++        }
++
++        LambdaQueryWrapper<CouponTemplateRemindDO> queryWrapper = Wrappers.lambdaQuery(CouponTemplateRemindDO.class)
++                .eq(CouponTemplateRemindDO::getUserId, UserContext.getUserId())
++                .eq(CouponTemplateRemindDO::getCouponTemplateId, requestParam.getCouponTemplateId());
++        CouponTemplateRemindDO couponTemplateRemindDO = couponTemplateRemindMapper.selectOne(queryWrapper);
++        if (couponTemplateRemindDO == null) {
++            throw new ClientException("优惠券模板预约信息不存在");
++        }
++
++        // 计算 BitMap 信息
++        Long bitMap = CouponTemplateRemindUtil.calculateBitMap(requestParam.getRemindTime(), requestParam.getType());
++        if ((bitMap & couponTemplateRemindDO.getInformation()) == 0L) {
++            throw new ClientException("您没有预约该时间点的提醒");
++        }
++
++        bitMap ^= couponTemplateRemindDO.getInformation();
++        queryWrapper.eq(CouponTemplateRemindDO::getInformation, couponTemplateRemindDO.getInformation());
++        if (bitMap.equals(0L)) {
++            // 如果新 BitMap 信息是 0，说明已经没有预约提醒了，可以直接删除
++            if (couponTemplateRemindMapper.delete(queryWrapper) == 0) {
++                // MySQL 乐观锁进行删除，如果删除失败，说明用户可能同时正在进行删除、新增提醒操作
++                throw new ClientException("取消提醒失败，请刷新页面后重试");
++            }
++        } else {
++            // 虽然删除了这个预约提醒，但还有其它提醒，那就更新数据库
++            couponTemplateRemindDO.setInformation(bitMap);
++            if (couponTemplateRemindMapper.update(couponTemplateRemindDO, queryWrapper) == 0) {
++                // MySQL 乐观锁进行更新，如果更新失败，说明用户可能同时正在进行删除、新增提醒操作
++                throw new ClientException("取消提醒失败，请刷新页面后重试");
++            }
++        }
++
++        // 取消提醒这个信息添加到布隆过滤器中
++        cancelRemindBloomFilter.add(String.valueOf(Objects.hash(requestParam.getCouponTemplateId(), UserContext.getUserId(), requestParam.getRemindTime(), requestParam.getType())));
++
++        // 删除用户预约提醒的缓存信息，通过更新数据库删除缓存策略保障数据库和缓存一致性
++        stringRedisTemplate.delete(String.format(USER_COUPON_TEMPLATE_REMIND_INFORMATION, UserContext.getUserId()));
++    }
++
++    @Override
++    public boolean isCancelRemind(CouponTemplateRemindDTO requestParam) {
++        if (!cancelRemindBloomFilter.contains(String.valueOf(Objects.hash(requestParam.getCouponTemplateId(), requestParam.getUserId(), requestParam.getRemindTime(), requestParam.getType())))) {
++            // 布隆过滤器中不存在，说明没取消提醒，此时已经能挡下大部分请求
++            return false;
++        }
++
++        // 对于少部分的“取消了预约”，可能是误判，此时需要去数据库中查找
++        LambdaQueryWrapper<CouponTemplateRemindDO> queryWrapper = Wrappers.lambdaQuery(CouponTemplateRemindDO.class)
++                .eq(CouponTemplateRemindDO::getUserId, requestParam.getUserId())
++                .eq(CouponTemplateRemindDO::getCouponTemplateId, requestParam.getCouponTemplateId());
++        CouponTemplateRemindDO couponTemplateRemindDO = couponTemplateRemindMapper.selectOne(queryWrapper);
++        if (couponTemplateRemindDO == null) {
++            // 数据库中没该条预约提醒，说明被取消
++            return true;
++        }
++
++        // 即使存在数据，也要检查该类型的该时间点是否有提醒
++        Long information = couponTemplateRemindDO.getInformation();
++        Long bitMap = CouponTemplateRemindUtil.calculateBitMap(requestParam.getRemindTime(), requestParam.getType());
++
++        // 按位与等于 0 说明用户取消了预约
++        return (bitMap & information) == 0L;
+     }
+ }
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/toolkit/CouponTemplateRemindUtil.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/toolkit/CouponTemplateRemindUtil.java
+index d9497d5..f8d9bfe 100644
+--- a/engine/src/main/java/com/nageoffer/onecoupon/engine/toolkit/CouponTemplateRemindUtil.java
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/toolkit/CouponTemplateRemindUtil.java
+@@ -34,8 +34,15 @@
+ 
+ package com.nageoffer.onecoupon.engine.toolkit;
+ 
++import cn.hutool.core.date.DateUtil;
++import com.nageoffer.onecoupon.engine.common.enums.CouponRemindTypeEnum;
++import com.nageoffer.onecoupon.engine.dto.resp.CouponTemplateRemindQueryRespDTO;
+ import com.nageoffer.onecoupon.framework.exception.ClientException;
+ 
++import java.util.ArrayList;
++import java.util.Date;
++import java.util.List;
++
+ /**
+  * 优惠券预约提醒工具类
+  * <p>
+@@ -55,6 +62,34 @@ public class CouponTemplateRemindUtil {
+      */
+     private static final int TIME_INTERVAL = 5;
+ 
++    /**
++     * 提醒方式的数量
++     */
++    private static final int TYPE_COUNT = CouponRemindTypeEnum.values().length;
++
++    /**
++     * 填充预约信息
++     */
++    public static void fillRemindInformation(CouponTemplateRemindQueryRespDTO resp, Long information) {
++        List<Date> dateList = new ArrayList<>();
++        List<String> remindType = new ArrayList<>();
++        Date validStartTime = resp.getValidStartTime();
++        for (int i = NEXT_TYPE_BITS - 1; i >= 0; i--) {
++            // 按时间节点倒叙遍历，即离开抢时间最久，离现在最近
++            for (int j = 0; j < TYPE_COUNT; j++) {
++                // 对于每个时间节点，遍历所有类型
++                if (((information >> (j * NEXT_TYPE_BITS + i)) & 1) == 1) {
++                    // 该时间节点的该提醒类型用户有预约
++                    Date date = DateUtil.offsetMinute(validStartTime, -((i + 1) * TIME_INTERVAL));
++                    dateList.add(date);
++                    remindType.add(CouponRemindTypeEnum.getDescribeByType(j));
++                }
++            }
++        }
++        resp.setRemindTime(dateList);
++        resp.setRemindType(remindType);
++    }
++
+     /**
+      * 根据预约时间和预约类型计算bitmap
+      */
+diff --git a/engine/src/main/resources/shardingsphere-config.yaml b/engine/src/main/resources/shardingsphere-config.yaml
+index af1f257..13525e7 100644
+--- a/engine/src/main/resources/shardingsphere-config.yaml
++++ b/engine/src/main/resources/shardingsphere-config.yaml
+@@ -76,6 +76,7 @@ rules:
+           algorithmClassName: com.nageoffer.onecoupon.engine.dao.sharding.DBHashModShardingAlgorithm
+           sharding-count: 16 # 分片总数量
+           strategy: standard # 分片类型，单字段分片
++          business-tag: coupon-template # 自定义业务标签
+       coupon_template_table_mod: # 优惠券分表算法定义
+         type: CLASS_BASED # 根据自定义库分片算法类进行分片
+         props: # 分片相关属性

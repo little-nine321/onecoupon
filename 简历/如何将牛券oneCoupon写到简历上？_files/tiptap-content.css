@@ -1,0 +1,2402 @@
+
+
+/* ── Base wrapper ── */
+.tiptap-wrapper.tiptap-wrapper {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #2f3034;
+  word-wrap: break-word;
+}
+
+/* ── Paragraphs ── */
+.tiptap-wrapper.tiptap-wrapper p {
+  line-height: 1.8;
+  margin: 0.75rem 0;
+}
+
+.tiptap-wrapper.tiptap-wrapper ul:not([data-type="taskList"]) {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.625rem 0;
+}
+
+.tiptap-wrapper.tiptap-wrapper ul:not([data-type="taskList"]) > li {
+  margin: 0.375rem 0;
+  padding-left: 1.75rem;
+  position: relative;
+  color: #444;
+  line-height: 1.7;
+  transition: color 0.2s ease;
+}
+
+.tiptap-wrapper.tiptap-wrapper ul:not([data-type="taskList"]) > li:hover {
+  color: #222;
+}
+
+/* Level 1 bullet — blue dot */
+.tiptap-wrapper.tiptap-wrapper ul:not([data-type="taskList"]) > li::before {
+  content: '●';
+  position: absolute;
+  left: 0.35rem;
+  top: 0.2rem;
+  color: #5b8def;
+  font-size: 1.1em;
+  font-weight: normal;
+  line-height: 1;
+}
+
+/* Nested unordered list level 2 */
+.tiptap-wrapper.tiptap-wrapper ul:not([data-type="taskList"]) > li ul:not([data-type="taskList"]) {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.375rem 0 0 0;
+}
+
+.tiptap-wrapper.tiptap-wrapper ul:not([data-type="taskList"]) > li ul:not([data-type="taskList"]) > li:not([data-type="taskItem"]) {
+  padding-left: 1.75rem;
+}
+
+/* Level 2 bullet — purple dot */
+.tiptap-wrapper.tiptap-wrapper ul:not([data-type="taskList"]) > li ul:not([data-type="taskList"]) > li:not([data-type="taskItem"])::before {
+  content: '●';
+  left: 0.35rem;
+  top: 0.2rem;
+  color: #9b7dd9;
+  font-size: 1em;
+}
+
+/* Level 3 nested unordered list */
+.tiptap-wrapper.tiptap-wrapper ul:not([data-type="taskList"]) > li ul:not([data-type="taskList"]) > li:not([data-type="taskItem"]) ul:not([data-type="taskList"]) > li:not([data-type="taskItem"]) {
+  padding-left: 1.75rem;
+}
+
+/* Level 3 bullet — pink dot */
+.tiptap-wrapper.tiptap-wrapper ul:not([data-type="taskList"]) > li ul:not([data-type="taskList"]) > li:not([data-type="taskItem"]) ul:not([data-type="taskList"]) > li:not([data-type="taskItem"])::before {
+  content: '●';
+  left: 0.35rem;
+  top: 0.2rem;
+  color: #d47ba3;
+  font-size: 0.9em;
+}
+
+/* Nested ordered list inside unordered list */
+.tiptap-wrapper.tiptap-wrapper ul:not([data-type="taskList"]) > li ol {
+  padding-left: 0;
+  margin: 0.375rem 0 0 0;
+}
+
+/* ── Ordered list ── */
+.tiptap-wrapper.tiptap-wrapper ol {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.625rem 0;
+  counter-reset: ordered-counter;
+}
+
+.tiptap-wrapper.tiptap-wrapper ol > li {
+  margin: 0.375rem 0;
+  padding-left: 2rem;
+  position: relative;
+  color: #444;
+  line-height: 1.7;
+  transition: color 0.2s ease;
+  counter-increment: ordered-counter;
+}
+
+.tiptap-wrapper.tiptap-wrapper ol > li:hover {
+  color: #222;
+}
+
+/* Level 1 ordered number — blue background */
+.tiptap-wrapper.tiptap-wrapper ol > li::before {
+  content: counter(ordered-counter);
+  position: absolute;
+  left: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  line-height: 1.5rem;
+  text-align: center;
+  background: #e8f1ff;
+  color: #5b8def;
+  border-radius: 0.375rem;
+  font-size: 0.85em;
+  font-weight: 600;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.tiptap-wrapper.tiptap-wrapper ol > li:hover::before {
+  background: #d0e4ff;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Nested unordered list inside ordered list */
+.tiptap-wrapper.tiptap-wrapper ol > li ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.375rem 0 0 0;
+}
+
+.tiptap-wrapper.tiptap-wrapper ol > li ul > li {
+  padding-left: 1.75rem;
+}
+
+.tiptap-wrapper.tiptap-wrapper ol > li ul > li::before {
+  content: '●';
+  position: absolute;
+  left: 0.35rem;
+  top: 0.2rem;
+  width: auto;
+  height: auto;
+  line-height: 1;
+  text-align: left;
+  background: none;
+  color: #9b7dd9;
+  border-radius: 0;
+  font-size: 1em;
+  font-weight: normal;
+  box-shadow: none;
+  transition: none;
+}
+
+.tiptap-wrapper.tiptap-wrapper ol > li ul > li:hover::before {
+  background: none;
+  box-shadow: none;
+}
+
+/* Nested ordered list level 2 */
+.tiptap-wrapper.tiptap-wrapper ol > li ol {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.375rem 0 0 0;
+  counter-reset: ordered-counter-2;
+}
+
+.tiptap-wrapper.tiptap-wrapper ol > li ol > li {
+  padding-left: 2rem;
+  counter-increment: ordered-counter-2;
+}
+
+/* Level 2 ordered number — purple background */
+.tiptap-wrapper.tiptap-wrapper ol > li ol > li::before {
+  content: counter(ordered-counter-2, lower-alpha);
+  background: #f1ebf8;
+  color: #9b7dd9;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.tiptap-wrapper.tiptap-wrapper ol > li ol > li:hover::before {
+  background: #e7d9f5;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Nested ordered list level 3 */
+.tiptap-wrapper.tiptap-wrapper ol > li ol > li ol {
+  counter-reset: ordered-counter-3;
+}
+
+.tiptap-wrapper.tiptap-wrapper ol > li ol > li ol > li {
+  counter-increment: ordered-counter-3;
+}
+
+/* Level 3 ordered number — pink background */
+.tiptap-wrapper.tiptap-wrapper ol > li ol > li ol > li::before {
+  content: counter(ordered-counter-3, lower-roman);
+  background: #fdeaf4;
+  color: #d47ba3;
+}
+
+.tiptap-wrapper.tiptap-wrapper ol > li ol > li ol > li:hover::before {
+  background: #fdd0e9;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Task list ── */
+.tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.75em 0;
+}
+
+.tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  list-style: none;
+  margin: 0.35em 0;
+  padding: 0.2em 0.25em;
+  position: relative;
+  color: #37352f;
+  line-height: 1.7;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+}
+
+/* Ensure no list marker is shown */
+.tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* Hover highlight */
+.tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li:hover {
+  background-color: rgba(55, 53, 47, 0.03);
+}
+
+/* Label container */
+.tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li > label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-right: 8px;
+  margin-top: 0;
+  height: 1.7em;
+  flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Hidden span */
+.tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li > label > span {
+  display: none;
+}
+
+/* Checkbox — SVG icon style */
+.tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li > label > input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: url('../assets_dweb/check_box.svg') no-repeat center;
+  background-size: contain;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  vertical-align: middle;
+}
+
+/* Checkbox hover */
+.tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li > label > input[type="checkbox"]:hover {
+  transform: scale(1.08);
+}
+
+/* Checkbox checked */
+.tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li > label > input[type="checkbox"]:checked {
+  background-image: url('../assets_dweb/check_box_outline_blank.svg');
+}
+
+.tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li[data-checked="true"] > label > input[type="checkbox"] {
+  background-image: url('../assets_dweb/check_box_outline_blank.svg');
+}
+
+/* Checkbox focus */
+.tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li > label > input[type="checkbox"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.15);
+}
+
+/* Checkbox active */
+.tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li > label > input[type="checkbox"]:active {
+  transform: scale(0.92);
+}
+
+/* Content container */
+.tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li > div {
+  flex: 1;
+  line-height: 1.7;
+  color: #37352f;
+  min-height: 1.7em;
+  transition: all 0.2s ease;
+}
+
+.tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li > div p {
+  margin: 0;
+  line-height: inherit;
+  color: inherit;
+}
+
+/* Empty content placeholder */
+.tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li > div p:empty::before {
+  content: attr(data-placeholder);
+  color: #cbd5e1;
+  pointer-events: none;
+}
+
+/* Completed task — text grayed out */
+.tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li[data-checked="true"] > div {
+  color: #94a3b8;
+  transition: all 0.2s ease;
+}
+
+.tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li[data-checked="true"] > div p {
+  color: inherit;
+}
+
+/* Completed task hover — slightly darker */
+.tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li[data-checked="true"]:hover > div {
+  color: #64748b;
+}
+
+/* Nested task list */
+.tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li ul[data-type="taskList"] {
+  margin: 0.25em 0 0 0;
+  padding-left: 24px;
+}
+
+/* ── Headings ── */
+.tiptap-wrapper.tiptap-wrapper h1 {
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 1rem 0;
+}
+
+.tiptap-wrapper.tiptap-wrapper h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0.875rem 0;
+}
+
+.tiptap-wrapper.tiptap-wrapper h3 {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin: 0.75rem 0;
+}
+
+/* ── Editor empty paragraph placeholder ── */
+.tiptap-wrapper.tiptap-wrapper p.is-editor-empty:first-child::before {
+  color: #9ca3af;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* ── Blockquote ── */
+.tiptap-wrapper.tiptap-wrapper blockquote {
+  border-left: 4px solid #3b82f6;
+  background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+  padding: 1rem;
+  padding-left: 1.25rem;
+  margin: 1.5rem 0;
+  color: #1e40af;
+  font-style: italic;
+  border-radius: 0.5rem;
+  box-shadow: inset 0 1px 2px rgba(59, 130, 246, 0.1);
+  transition: all 0.3s ease;
+}
+
+.tiptap-wrapper.tiptap-wrapper blockquote:hover {
+  box-shadow: inset 0 1px 3px rgba(59, 130, 246, 0.2);
+  background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%);
+}
+
+/* ── Code block wrapper ── */
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper {
+  margin: 1.5rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #3e4451;
+  background: #282c34;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:hover {
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 1px 1px rgba(56, 180, 174, 0.3);
+  border-color: #528b5e;
+  transform: translateY(-2px);
+}
+
+/* Code block toolbar */
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper .code-block-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: #21252b;
+  border-bottom: 1px solid #3e4451;
+  gap: 0.5rem;
+}
+
+/* Language label */
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper .code-block-language-label {
+  color: #7d8590;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-family: 'Fira Code', 'Monaco', 'Menlo', monospace;
+  letter-spacing: 0.03em;
+  text-transform: lowercase;
+}
+
+/* Language selector */
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper .code-block-language-select {
+  padding: 0.25rem 0.5rem;
+  padding-right: 1.5rem;
+  border: 1px solid #3e4451;
+  border-radius: 4px;
+  background: #282c34;
+  color: #abb2bf;
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-family: 'Fira Code', 'Monaco', 'Menlo', monospace;
+  cursor: pointer;
+  transition: all 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23abb2bf' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.4rem center;
+  min-width: 100px;
+}
+
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper .code-block-language-select:hover {
+  background-color: #3e4451;
+  border-color: #528b5e;
+}
+
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper .code-block-language-select:focus {
+  outline: none;
+  border-color: #61afef;
+  box-shadow: 0 0 0 2px rgba(97, 175, 239, 0.2);
+}
+
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper .code-block-language-select option {
+  background: #21252b;
+  color: #abb2bf;
+  padding: 0.5rem;
+}
+
+/* Inner pre inside code-block-wrapper — reset */
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper pre {
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper pre::before {
+  display: none !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper pre:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper pre code {
+  padding: 1rem 1.25rem !important;
+  padding-top: 1rem !important;
+}
+
+/* ── Language-specific code block wrapper border colors ── */
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="javascript"]),
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="typescript"]),
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="jsx"]),
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="tsx"]) {
+  border-color: #61afef;
+}
+
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="javascript"]):hover,
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="typescript"]):hover,
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="jsx"]):hover,
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="tsx"]):hover {
+  border-color: #87ceeb;
+}
+
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="python"]) {
+  border-color: #d19a66;
+}
+
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="python"]):hover {
+  border-color: #f0ad4e;
+}
+
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="java"]) {
+  border-color: #e06c75;
+}
+
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="java"]):hover {
+  border-color: #ff7b7c;
+}
+
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="sql"]) {
+  border-color: #98c379;
+}
+
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="sql"]):hover {
+  border-color: #b8e6a0;
+}
+
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="css"]),
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="scss"]),
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="less"]) {
+  border-color: #c678dd;
+}
+
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="css"]):hover,
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="scss"]):hover,
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="less"]):hover {
+  border-color: #d890eb;
+}
+
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="json"]) {
+  border-color: #98c379;
+}
+
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:has([data-language="json"]):hover {
+  border-color: #b8e6a0;
+}
+
+/* ── Pre (standalone code block) ── */
+.tiptap-wrapper.tiptap-wrapper pre {
+  background: #282c34 !important;
+  color: #abb2bf;
+  padding: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 1.5rem 0;
+  position: relative;
+  border: 1px solid #3e4451;
+  line-height: 1.6;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 0 0 1px rgba(56, 180, 174, 0);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 100%;
+  width: 100%;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre:hover {
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 1px 1px rgba(56, 180, 174, 0.3);
+  border-color: #528b5e;
+  transform: translateY(-2px);
+}
+
+/* Code selection on hover */
+.tiptap-wrapper.tiptap-wrapper pre:has(code):hover code::selection {
+  background: rgba(97, 175, 239, 0.3);
+  color: inherit;
+}
+
+/* Language label — VS Code style */
+.tiptap-wrapper.tiptap-wrapper pre::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #21252b;
+  border-bottom: 1px solid #3e4451;
+  padding: 0.625rem 1.25rem;
+  color: #7d8590;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: lowercase;
+  letter-spacing: 0.03em;
+  font-family: 'Fira Code', 'Monaco', 'Menlo', monospace;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* JavaScript/TypeScript blue accent */
+.tiptap-wrapper.tiptap-wrapper pre[data-language="javascript"],
+.tiptap-wrapper.tiptap-wrapper pre[data-language="typescript"],
+.tiptap-wrapper.tiptap-wrapper pre[data-language="jsx"],
+.tiptap-wrapper.tiptap-wrapper pre[data-language="tsx"] {
+  border-color: #61afef;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre[data-language="javascript"]:hover,
+.tiptap-wrapper.tiptap-wrapper pre[data-language="typescript"]:hover,
+.tiptap-wrapper.tiptap-wrapper pre[data-language="jsx"]:hover,
+.tiptap-wrapper.tiptap-wrapper pre[data-language="tsx"]:hover {
+  border-color: #87ceeb;
+  box-shadow: 0 12px 48px rgba(97, 175, 239, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 1px 1px rgba(135, 206, 235, 0.2);
+}
+
+/* Python accent */
+.tiptap-wrapper.tiptap-wrapper pre[data-language="python"] {
+  border-color: #d19a66;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre[data-language="python"]:hover {
+  border-color: #f0ad4e;
+  box-shadow: 0 12px 48px rgba(209, 154, 102, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 1px 1px rgba(240, 173, 78, 0.2);
+}
+
+/* Java accent */
+.tiptap-wrapper.tiptap-wrapper pre[data-language="java"] {
+  border-color: #e06c75;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre[data-language="java"]:hover {
+  border-color: #ff7b7c;
+  box-shadow: 0 12px 48px rgba(224, 108, 117, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 1px 1px rgba(255, 123, 124, 0.2);
+}
+
+/* SQL accent */
+.tiptap-wrapper.tiptap-wrapper pre[data-language="sql"] {
+  border-color: #98c379;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre[data-language="sql"]:hover {
+  border-color: #b8e6a0;
+  box-shadow: 0 12px 48px rgba(152, 195, 121, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 1px 1px rgba(184, 230, 160, 0.2);
+}
+
+/* CSS/SCSS/Less accent */
+.tiptap-wrapper.tiptap-wrapper pre[data-language="css"],
+.tiptap-wrapper.tiptap-wrapper pre[data-language="scss"],
+.tiptap-wrapper.tiptap-wrapper pre[data-language="less"] {
+  border-color: #c678dd;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre[data-language="css"]:hover,
+.tiptap-wrapper.tiptap-wrapper pre[data-language="scss"]:hover,
+.tiptap-wrapper.tiptap-wrapper pre[data-language="less"]:hover {
+  border-color: #d890eb;
+  box-shadow: 0 12px 48px rgba(198, 120, 221, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 1px 1px rgba(216, 144, 235, 0.2);
+}
+
+/* JSON accent */
+.tiptap-wrapper.tiptap-wrapper pre[data-language="json"] {
+  border-color: #98c379;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre[data-language="json"]:hover {
+  border-color: #b8e6a0;
+}
+
+/* Code content inside pre */
+.tiptap-wrapper.tiptap-wrapper pre code {
+  color: inherit;
+  display: block;
+  font-family: 'Fira Code', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Courier New', monospace;
+  font-size: 13px;
+  position: relative;
+  white-space: pre;
+  padding: 1.25rem 1.5rem;
+  padding-top: 3rem;
+  background: transparent !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  letter-spacing: 0.5px;
+}
+
+/* ── Code > code (pre > code) scrollbar & selection ── */
+.tiptap-wrapper.tiptap-wrapper pre > code::selection {
+  background: rgba(97, 175, 239, 0.4);
+  color: #abb2bf;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code::-webkit-scrollbar {
+  height: 12px;
+  width: 12px;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code::-webkit-scrollbar-thumb {
+  background: #3e4451;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code::-webkit-scrollbar-thumb:hover {
+  background: #528b5e;
+  background-clip: content-box;
+}
+
+/* ==========================================================================
+ * Syntax Highlighting — VS Code One Dark Pro Theme
+ * ========================================================================== */
+
+/* Keyword — purple */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-keyword {
+  color: #c678dd !important;
+  font-weight: 500;
+}
+
+/* Literal — orange */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-literal {
+  color: #d19a66 !important;
+  font-weight: 500;
+}
+
+/* Reserved — purple */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-reserved {
+  color: #c678dd !important;
+  font-weight: 500;
+}
+
+/* Number — orange */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-number {
+  color: #d19a66 !important;
+}
+
+/* String — green */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-string {
+  color: #98c379 !important;
+}
+
+/* Char — green */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-char {
+  color: #98c379 !important;
+}
+
+/* Comment — gray italic */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-comment {
+  color: #5c6370 !important;
+  font-style: italic;
+}
+
+/* Doctag — purple */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-doctag {
+  color: #c678dd !important;
+  font-weight: 500;
+}
+
+/* Title — blue */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-title {
+  color: #61afef !important;
+  font-weight: 500;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-title.function_ {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-title.class_ {
+  color: #e5c07b !important;
+}
+
+/* Function — blue */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-function {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-function .hljs-title {
+  color: #61afef !important;
+  font-weight: 500;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-function .hljs-params {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-function .hljs-keyword {
+  color: #c678dd !important;
+}
+
+/* Class — yellow */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-class {
+  color: #e5c07b !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-class .hljs-title {
+  color: #e5c07b !important;
+  font-weight: 600;
+}
+
+/* Type — yellow */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-type {
+  color: #e5c07b !important;
+}
+
+/* Variable — red */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-variable {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-variable.language_ {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-variable.constant_ {
+  color: #d19a66 !important;
+}
+
+/* Template variable — red */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-template-variable {
+  color: #e06c75 !important;
+}
+
+/* Property — red */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-property {
+  color: #e06c75 !important;
+}
+
+/* HTML/XML attribute — orange */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-attr {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-attribute {
+  color: #d19a66 !important;
+}
+
+/* Built-in — cyan */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-built_in {
+  color: #56b6c2 !important;
+}
+
+/* HTML tag — red */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-tag {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-tag .hljs-name {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-tag .hljs-attr {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-tag .hljs-string {
+  color: #98c379 !important;
+}
+
+/* Meta/preprocessor — cyan */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-meta {
+  color: #56b6c2 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-meta .hljs-keyword {
+  color: #c678dd !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-meta .hljs-string {
+  color: #98c379 !important;
+}
+
+/* Section/selector — blue */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-section {
+  color: #61afef !important;
+  font-weight: 600;
+}
+
+/* Symbol — blue */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-symbol {
+  color: #61afef !important;
+}
+
+/* Regexp — cyan */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-regexp {
+  color: #56b6c2 !important;
+}
+
+/* Diff addition — green bg */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-addition {
+  background-color: rgba(152, 195, 121, 0.15);
+  color: #98c379 !important;
+}
+
+/* Diff deletion — red bg */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-deletion {
+  background-color: rgba(224, 108, 117, 0.15);
+  color: #e06c75 !important;
+}
+
+/* CSS selector/name — red */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-name {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-selector-tag {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-selector-id {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-selector-class {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-selector-attr {
+  color: #c678dd !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-selector-pseudo {
+  color: #56b6c2 !important;
+}
+
+/* Quote — green */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-quote {
+  color: #98c379 !important;
+  font-style: italic;
+}
+
+/* Params — gray-white */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-params {
+  color: #abb2bf !important;
+}
+
+/* Emphasis — italic red */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-emphasis {
+  font-style: italic;
+  color: #e06c75 !important;
+}
+
+/* Strong — yellow */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-strong {
+  font-weight: 600;
+  color: #e5c07b !important;
+}
+
+/* Template tag — purple */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-template-tag {
+  color: #c678dd !important;
+}
+
+/* Link — blue */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-link {
+  color: #61afef !important;
+  text-decoration: underline;
+}
+
+/* Operator — cyan */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-operator {
+  color: #56b6c2 !important;
+}
+
+/* Punctuation — gray-white */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-punctuation {
+  color: #abb2bf !important;
+}
+
+/* Substitution */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-subst {
+  color: #abb2bf !important;
+}
+
+/* Attr value */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-string-value,
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-attr-value {
+  color: #98c379 !important;
+}
+
+/* Import/export */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-import,
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-export {
+  color: #c678dd !important;
+}
+
+/* Label */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-label {
+  color: #61afef !important;
+}
+
+/* Annotation/decorator */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-annotation,
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-decorator {
+  color: #d19a66 !important;
+}
+
+/* Code */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-code {
+  color: #98c379 !important;
+}
+
+/* Formula */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-formula {
+  color: #56b6c2 !important;
+}
+
+/* Bullet */
+.tiptap-wrapper.tiptap-wrapper pre > code .hljs-bullet {
+  color: #d19a66 !important;
+}
+
+/* ==========================================================================
+ * Language-Specific Syntax Highlighting
+ * ========================================================================== */
+
+/* ── JavaScript ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="javascript"] .hljs-keyword {
+  color: #c678dd !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="javascript"] .hljs-built_in {
+  color: #e5c07b !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="javascript"] .hljs-literal {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="javascript"] .hljs-this {
+  color: #e06c75 !important;
+  font-style: italic;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="javascript"] .hljs-title.function_ {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="javascript"] .hljs-string {
+  color: #98c379 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="javascript"] .hljs-template-variable {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="javascript"] .hljs-property {
+  color: #e06c75 !important;
+}
+
+/* ── TypeScript / TSX ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="typescript"] .hljs-keyword,
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="tsx"] .hljs-keyword {
+  color: #c678dd !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="typescript"] .hljs-built_in,
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="tsx"] .hljs-built_in {
+  color: #e5c07b !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="typescript"] .hljs-type,
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="tsx"] .hljs-type {
+  color: #e5c07b !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="typescript"] .hljs-title.class_,
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="tsx"] .hljs-title.class_ {
+  color: #e5c07b !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="typescript"] .hljs-title.function_,
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="tsx"] .hljs-title.function_ {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="typescript"] .hljs-property,
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="tsx"] .hljs-property {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="typescript"] .hljs-params,
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="tsx"] .hljs-params {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="typescript"] .hljs-attr,
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="tsx"] .hljs-attr {
+  color: #d19a66 !important;
+}
+
+/* ── HTML ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="html"] .hljs-tag {
+  color: #abb2bf !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="html"] .hljs-tag .hljs-name {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="html"] .hljs-tag .hljs-attr {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="html"] .hljs-tag .hljs-string {
+  color: #98c379 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="html"] .hljs-comment {
+  color: #5c6370 !important;
+  font-style: italic;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="html"] .hljs-doctag {
+  color: #c678dd !important;
+}
+
+/* ── XML ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="xml"] .hljs-tag {
+  color: #abb2bf !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="xml"] .hljs-tag .hljs-name {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="xml"] .hljs-tag .hljs-attr {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="xml"] .hljs-tag .hljs-string {
+  color: #98c379 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="xml"] .hljs-meta {
+  color: #56b6c2 !important;
+}
+
+/* ── CSS ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="css"] .hljs-selector-tag {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="css"] .hljs-selector-class {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="css"] .hljs-selector-id {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="css"] .hljs-selector-pseudo {
+  color: #56b6c2 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="css"] .hljs-selector-attr {
+  color: #c678dd !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="css"] .hljs-attribute {
+  color: #56b6c2 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="css"] .hljs-number {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="css"] .hljs-string {
+  color: #98c379 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="css"] .hljs-built_in {
+  color: #56b6c2 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="css"] .hljs-keyword {
+  color: #c678dd !important;
+}
+
+/* ── SCSS ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="scss"] .hljs-selector-tag {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="scss"] .hljs-selector-class {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="scss"] .hljs-selector-id {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="scss"] .hljs-variable {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="scss"] .hljs-attribute {
+  color: #56b6c2 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="scss"] .hljs-number {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="scss"] .hljs-keyword {
+  color: #c678dd !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="scss"] .hljs-built_in {
+  color: #56b6c2 !important;
+}
+
+/* ── Less ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="less"] .hljs-selector-tag {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="less"] .hljs-selector-class {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="less"] .hljs-variable {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="less"] .hljs-attribute {
+  color: #56b6c2 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="less"] .hljs-keyword {
+  color: #c678dd !important;
+}
+
+/* ── JSON ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="json"] .hljs-attr {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="json"] .hljs-string {
+  color: #98c379 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="json"] .hljs-number {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="json"] .hljs-literal {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="json"] .hljs-punctuation {
+  color: #abb2bf !important;
+}
+
+/* ── YAML ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="yaml"] .hljs-attr {
+  color: #56b6c2 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="yaml"] .hljs-string {
+  color: #98c379 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="yaml"] .hljs-number {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="yaml"] .hljs-literal {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="yaml"] .hljs-bullet {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="yaml"] .hljs-meta {
+  color: #c678dd !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="yaml"] .hljs-type {
+  color: #e5c07b !important;
+}
+
+/* ── Python ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="python"] .hljs-keyword {
+  color: #c678dd !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="python"] .hljs-built_in {
+  color: #56b6c2 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="python"] .hljs-decorator {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="python"] .hljs-title.function_ {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="python"] .hljs-title.class_ {
+  color: #e5c07b !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="python"] .hljs-params {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="python"] .hljs-string {
+  color: #98c379 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="python"] .hljs-number {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="python"] .hljs-meta {
+  color: #56b6c2 !important;
+}
+
+/* ── Java ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="java"] .hljs-keyword {
+  color: #c678dd !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="java"] .hljs-type {
+  color: #e5c07b !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="java"] .hljs-title.class_ {
+  color: #e5c07b !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="java"] .hljs-title.function_ {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="java"] .hljs-meta {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="java"] .hljs-params {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="java"] .hljs-string {
+  color: #98c379 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="java"] .hljs-number {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="java"] .hljs-built_in {
+  color: #56b6c2 !important;
+}
+
+/* ── C++ ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="cpp"] .hljs-keyword {
+  color: #c678dd !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="cpp"] .hljs-type {
+  color: #e5c07b !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="cpp"] .hljs-title.function_ {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="cpp"] .hljs-title.class_ {
+  color: #e5c07b !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="cpp"] .hljs-meta {
+  color: #56b6c2 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="cpp"] .hljs-string {
+  color: #98c379 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="cpp"] .hljs-number {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="cpp"] .hljs-built_in {
+  color: #56b6c2 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="cpp"] .hljs-comment {
+  color: #5c6370 !important;
+  font-style: italic;
+}
+
+/* ── C ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="c"] .hljs-keyword {
+  color: #c678dd !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="c"] .hljs-type {
+  color: #e5c07b !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="c"] .hljs-title.function_ {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="c"] .hljs-meta {
+  color: #56b6c2 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="c"] .hljs-string {
+  color: #98c379 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="c"] .hljs-number {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="c"] .hljs-built_in {
+  color: #56b6c2 !important;
+}
+
+/* ── C# ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="csharp"] .hljs-keyword {
+  color: #c678dd !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="csharp"] .hljs-type {
+  color: #e5c07b !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="csharp"] .hljs-title.class_ {
+  color: #e5c07b !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="csharp"] .hljs-title.function_ {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="csharp"] .hljs-meta {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="csharp"] .hljs-params {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="csharp"] .hljs-string {
+  color: #98c379 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="csharp"] .hljs-number {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="csharp"] .hljs-built_in {
+  color: #56b6c2 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="csharp"] .hljs-literal {
+  color: #d19a66 !important;
+}
+
+/* ── Go ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="go"] .hljs-keyword {
+  color: #c678dd !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="go"] .hljs-type {
+  color: #e5c07b !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="go"] .hljs-title.function_ {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="go"] .hljs-built_in {
+  color: #56b6c2 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="go"] .hljs-string {
+  color: #98c379 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="go"] .hljs-number {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="go"] .hljs-literal {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="go"] .hljs-params {
+  color: #e06c75 !important;
+}
+
+/* ── Rust ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="rust"] .hljs-keyword {
+  color: #c678dd !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="rust"] .hljs-type {
+  color: #e5c07b !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="rust"] .hljs-title.function_ {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="rust"] .hljs-title.class_ {
+  color: #e5c07b !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="rust"] .hljs-built_in {
+  color: #56b6c2 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="rust"] .hljs-string {
+  color: #98c379 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="rust"] .hljs-number {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="rust"] .hljs-symbol {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="rust"] .hljs-meta {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="rust"] .hljs-literal {
+  color: #d19a66 !important;
+}
+
+/* ── Ruby ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="ruby"] .hljs-keyword {
+  color: #c678dd !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="ruby"] .hljs-title.function_ {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="ruby"] .hljs-title.class_ {
+  color: #e5c07b !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="ruby"] .hljs-string {
+  color: #98c379 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="ruby"] .hljs-number {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="ruby"] .hljs-symbol {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="ruby"] .hljs-variable {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="ruby"] .hljs-built_in {
+  color: #56b6c2 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="ruby"] .hljs-literal {
+  color: #d19a66 !important;
+}
+
+/* ── PHP ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="php"] .hljs-keyword {
+  color: #c678dd !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="php"] .hljs-title.function_ {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="php"] .hljs-title.class_ {
+  color: #e5c07b !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="php"] .hljs-string {
+  color: #98c379 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="php"] .hljs-number {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="php"] .hljs-variable {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="php"] .hljs-built_in {
+  color: #56b6c2 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="php"] .hljs-meta {
+  color: #56b6c2 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="php"] .hljs-doctag {
+  color: #c678dd !important;
+}
+
+/* ── SQL ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="sql"] .hljs-keyword {
+  color: #c678dd !important;
+  text-transform: uppercase;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="sql"] .hljs-built_in {
+  color: #56b6c2 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="sql"] .hljs-string {
+  color: #98c379 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="sql"] .hljs-number {
+  color: #d19a66 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="sql"] .hljs-type {
+  color: #e5c07b !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="sql"] .hljs-operator {
+  color: #56b6c2 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="sql"] .hljs-variable {
+  color: #e06c75 !important;
+}
+
+/* ── Bash / Shell ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="bash"] .hljs-built_in,
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="shell"] .hljs-built_in {
+  color: #56b6c2 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="bash"] .hljs-variable,
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="shell"] .hljs-variable {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="bash"] .hljs-string,
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="shell"] .hljs-string {
+  color: #98c379 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="bash"] .hljs-keyword,
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="shell"] .hljs-keyword {
+  color: #c678dd !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="bash"] .hljs-function,
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="shell"] .hljs-function {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="bash"] .hljs-subst,
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="shell"] .hljs-subst {
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="bash"] .hljs-meta,
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="shell"] .hljs-meta {
+  color: #5c6370 !important;
+}
+
+/* ── Markdown ── */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="markdown"] .hljs-section {
+  color: #e06c75 !important;
+  font-weight: 600;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="markdown"] .hljs-bullet {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="markdown"] .hljs-link {
+  color: #61afef !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="markdown"] .hljs-code {
+  color: #98c379 !important;
+  background: rgba(152, 195, 121, 0.1);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="markdown"] .hljs-emphasis {
+  font-style: italic;
+  color: #e06c75 !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="markdown"] .hljs-strong {
+  font-weight: 600;
+  color: #e5c07b !important;
+}
+
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="markdown"] .hljs-quote {
+  color: #5c6370 !important;
+  font-style: italic;
+}
+
+/* Plaintext */
+.tiptap-wrapper.tiptap-wrapper pre > code[data-language="plaintext"] {
+  color: #abb2bf !important;
+}
+
+/* ── Image ── */
+.tiptap-wrapper.tiptap-wrapper img {
+  max-width: 100%;
+  height: auto;
+  margin: 1rem 0;
+  border-radius: 0.5rem;
+}
+
+/* ── Link ── */
+.tiptap-wrapper.tiptap-wrapper a {
+  color: #3b82f6;
+  cursor: pointer;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+  transition: all 0.2s ease;
+  padding-bottom: 1px;
+  position: relative;
+}
+
+.tiptap-wrapper.tiptap-wrapper a:hover {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.tiptap-wrapper.tiptap-wrapper a:active {
+  color: #1d4ed8;
+}
+
+.tiptap-wrapper.tiptap-wrapper a[href^="http"]:hover::after {
+  opacity: 1;
+}
+
+/* ── Horizontal rule ── */
+.tiptap-wrapper.tiptap-wrapper hr {
+  margin: 2rem 0;
+  border: none;
+  border-top: 2px solid #e5e7eb;
+}
+
+/* ── Table ── */
+/* Table wrapper - horizontal scroll on narrow screens to avoid overflow */
+.tiptap-wrapper.tiptap-wrapper .tableWrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  margin: 1.5rem 0;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.tiptap-wrapper.tiptap-wrapper .tableWrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.tiptap-wrapper.tiptap-wrapper .tableWrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tiptap-wrapper.tiptap-wrapper .tableWrapper::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.tiptap-wrapper.tiptap-wrapper .tableWrapper:hover::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+}
+
+.tiptap-wrapper.tiptap-wrapper .tableWrapper table {
+  margin: 0;
+}
+
+.tiptap-wrapper.tiptap-wrapper table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5rem 0;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  font-size: 0.95rem;
+}
+
+.tiptap-wrapper.tiptap-wrapper table td,
+.tiptap-wrapper.tiptap-wrapper table th {
+  border: 1px solid #d1d5db;
+  padding: 0.875rem 1.25rem;
+  text-align: left;
+  vertical-align: top;
+  min-width: 120px;
+  position: relative;
+  transition: all 0.15s ease;
+  line-height: 1.6;
+}
+
+/* Empty cell placeholder */
+.tiptap-wrapper.tiptap-wrapper table td:empty::before,
+.tiptap-wrapper.tiptap-wrapper table th:empty::before {
+  content: '';
+  display: inline-block;
+  width: 1px;
+  height: 1.2rem;
+}
+
+.tiptap-wrapper.tiptap-wrapper table th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #0f172a;
+  border-bottom: 2px solid #cbd5e1;
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  position: relative;
+}
+
+.tiptap-wrapper.tiptap-wrapper table th:hover {
+  background: #f1f5f9;
+}
+
+.tiptap-wrapper.tiptap-wrapper table th:first-child {
+  border-left: 2px solid #d1d5db;
+}
+
+.tiptap-wrapper.tiptap-wrapper table th:last-child {
+  border-right: 2px solid #d1d5db;
+}
+
+.tiptap-wrapper.tiptap-wrapper table td {
+  background: #ffffff;
+  color: #374151;
+}
+
+.tiptap-wrapper.tiptap-wrapper table td:hover {
+  background: #f9fafb;
+}
+
+.tiptap-wrapper.tiptap-wrapper table td:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+  background: #eff6ff;
+  box-shadow: inset 0 0 0 1px #3b82f6;
+}
+
+.tiptap-wrapper.tiptap-wrapper table td:first-child {
+  border-left: 2px solid #d1d5db;
+}
+
+.tiptap-wrapper.tiptap-wrapper table td:last-child {
+  border-right: 2px solid #d1d5db;
+}
+
+/* Row hover */
+.tiptap-wrapper.tiptap-wrapper table tr {
+  transition: background-color 0.15s ease;
+}
+
+.tiptap-wrapper.tiptap-wrapper table tr:hover td {
+  background: #f3f4f6;
+}
+
+/* Even rows */
+.tiptap-wrapper.tiptap-wrapper table tr:nth-child(even) td {
+  background: #f9fafb;
+}
+
+.tiptap-wrapper.tiptap-wrapper table tr:nth-child(even) td:hover {
+  background: #f3f4f6;
+}
+
+/* Last row */
+.tiptap-wrapper.tiptap-wrapper table tr:last-child td {
+  border-bottom: 2px solid #d1d5db;
+}
+
+/* Thead */
+.tiptap-wrapper.tiptap-wrapper table thead tr {
+  background: #f8fafc;
+}
+
+.tiptap-wrapper.tiptap-wrapper table thead tr:hover th {
+  background: #f1f5f9;
+}
+
+/* Table border-radius corners */
+.tiptap-wrapper.tiptap-wrapper table thead tr:first-child th:first-child {
+  border-top-left-radius: 7px;
+}
+
+.tiptap-wrapper.tiptap-wrapper table thead tr:first-child th:last-child {
+  border-top-right-radius: 7px;
+}
+
+.tiptap-wrapper.tiptap-wrapper table tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 7px;
+}
+
+.tiptap-wrapper.tiptap-wrapper table tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 7px;
+}
+
+/* ── Selected cell ── */
+.tiptap-wrapper.tiptap-wrapper .selectedCell {
+  background-color: #dbeafe !important;
+  box-shadow: inset 0 0 0 2px #3b82f6 !important;
+  position: relative;
+}
+
+.tiptap-wrapper.tiptap-wrapper .selectedCell::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(59, 130, 246, 0.1);
+  pointer-events: none;
+}
+
+/* ── Column resize handle ── */
+.tiptap-wrapper.tiptap-wrapper .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: #3b82f6;
+  cursor: col-resize;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.tiptap-wrapper.tiptap-wrapper .column-resize-handle:hover {
+  opacity: 1;
+  background-color: #2563eb;
+}
+
+.tiptap-wrapper.tiptap-wrapper table:hover .column-resize-handle {
+  opacity: 0.4;
+}
+
+.tiptap-wrapper.tiptap-wrapper table:hover .column-resize-handle:hover {
+  opacity: 1;
+}
+
+/* ── Inline code ── */
+.tiptap-wrapper.tiptap-wrapper code:not(pre code) {
+  display: inline-block;
+  padding: 0 0.3rem;
+  margin: 0 0.05rem;
+  background-color: color-mix(in srgb, #f5f0eb, transparent 60%);
+  color: #8b3a3a;
+  border-radius: 0.25rem;
+  font-family: 'Fira Code', 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 0.875em;
+  border: none;
+  vertical-align: baseline;
+  word-break: break-word;
+  white-space: normal;
+  transition: background-color 0.15s ease;
+}
+
+.tiptap-wrapper.tiptap-wrapper code:not(pre code):hover {
+  background-color: color-mix(in srgb, #f5f0eb, transparent 45%);
+}
+
+/* ── Preview mode: disable code block hover transform ── */
+.tiptap-wrapper.tiptap-wrapper .code-block-wrapper:hover,
+.tiptap-wrapper.tiptap-wrapper pre:hover {
+  transform: none;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  border-color: #3e4451;
+}
+
+/* ── Narrow screen: compact table cells to reduce overflow ── */
+@media (max-width: 640px) {
+  .tiptap-wrapper.tiptap-wrapper table td,
+  .tiptap-wrapper.tiptap-wrapper table th {
+    padding: 0.5rem 0.75rem;
+    min-width: 88px;
+    font-size: 0.85rem;
+  }
+}
+
+/* ==========================================================================
+ * Dark Mode
+ * ========================================================================== */
+@media (prefers-color-scheme: dark) {
+
+  .tiptap-wrapper.tiptap-wrapper {
+    background-color: #11161D;
+    color: #d6dee8;
+  }
+
+  /* Paragraphs */
+  .tiptap-wrapper.tiptap-wrapper p {
+    color: #d6dee8;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper p.is-editor-empty:first-child::before {
+    color: #7d8792;
+  }
+
+  /* Headings */
+  .tiptap-wrapper.tiptap-wrapper h1,
+  .tiptap-wrapper.tiptap-wrapper h2,
+  .tiptap-wrapper.tiptap-wrapper h3 {
+    color: #f6f8fa;
+  }
+
+  /* Links */
+  .tiptap-wrapper.tiptap-wrapper a {
+    color: #79c0ff;
+    border-bottom-color: rgba(121, 192, 255, 0.34);
+  }
+
+  .tiptap-wrapper.tiptap-wrapper a:hover {
+    color: #aad7ff;
+    border-bottom-color: #aad7ff;
+    background: rgba(121, 192, 255, 0.12);
+  }
+
+  .tiptap-wrapper.tiptap-wrapper a:active {
+    color: #d8efff;
+  }
+
+  /* Unordered list */
+  .tiptap-wrapper.tiptap-wrapper ul:not([data-type="taskList"]) > li {
+    color: #d6dee8;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper ul:not([data-type="taskList"]) > li:hover {
+    color: #f0f4f8;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper ul:not([data-type="taskList"]) > li::before {
+    color: #79c0ff;
+  }
+
+  /* Level 2 */
+  .tiptap-wrapper.tiptap-wrapper ul:not([data-type="taskList"]) > li ul:not([data-type="taskList"]) > li:not([data-type="taskItem"])::before {
+    color: #c2a7f2;
+  }
+
+  /* Level 3 */
+  .tiptap-wrapper.tiptap-wrapper ul:not([data-type="taskList"]) > li ul:not([data-type="taskList"]) > li:not([data-type="taskItem"]) ul:not([data-type="taskList"]) > li:not([data-type="taskItem"])::before {
+    color: #f0a6c8;
+  }
+
+  /* Ordered list */
+  .tiptap-wrapper.tiptap-wrapper ol > li {
+    color: #d6dee8;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper ol > li:hover {
+    color: #f0f4f8;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper ol > li::before {
+    background: #183047;
+    color: #79c0ff;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+
+  .tiptap-wrapper.tiptap-wrapper ol > li:hover::before {
+    background: #214968;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Nested ordered level 2 */
+  .tiptap-wrapper.tiptap-wrapper ol > li ol > li::before {
+    background: #251F38;
+    color: #c2a7f2;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper ol > li ol > li:hover::before {
+    background: #2E2748;
+  }
+
+  /* Nested ordered level 3 */
+  .tiptap-wrapper.tiptap-wrapper ol > li ol > li ol > li::before {
+    background: #331F30;
+    color: #f0a6c8;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper ol > li ol > li ol > li:hover::before {
+    background: #41293D;
+  }
+
+  /* Nested unordered inside ordered */
+  .tiptap-wrapper.tiptap-wrapper ol > li ul > li::before {
+    color: #c2a7f2;
+    background: none;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper ol > li ul > li:hover::before {
+    background: none;
+  }
+
+  /* Task list */
+  .tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li {
+    color: #d6dee8;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li > label > input[type="checkbox"]:focus {
+    box-shadow: 0 0 0 3px rgba(138, 150, 163, 0.24);
+  }
+
+  .tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li > div {
+    color: #d6dee8;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li > div p:empty::before {
+    color: #65707d;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li[data-checked="true"] > div {
+    color: #858f9b;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li[data-checked="true"] > div p {
+    color: inherit;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper ul[data-type="taskList"] > li[data-checked="true"]:hover > div {
+    color: #a2acb8;
+  }
+
+  /* Blockquote */
+  .tiptap-wrapper.tiptap-wrapper blockquote {
+    border-left-color: #79c0ff;
+    background: linear-gradient(135deg, #141E28 0%, #111A23 100%);
+    color: #b5dcff;
+    box-shadow: inset 0 1px 2px rgba(121, 192, 255, 0.12);
+  }
+
+  .tiptap-wrapper.tiptap-wrapper blockquote:hover {
+    background: linear-gradient(135deg, #1A2A38 0%, #172633 100%);
+    box-shadow: inset 0 1px 3px rgba(121, 192, 255, 0.18);
+  }
+
+  .tiptap-wrapper.tiptap-wrapper blockquote p {
+    color: inherit;
+  }
+
+  /* Inline code */
+  .tiptap-wrapper.tiptap-wrapper code:not(pre code) {
+    background-color: rgba(139, 148, 158, 0.20);
+    color: #ffbcad;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper code:not(pre code):hover {
+    background-color: rgba(139, 148, 158, 0.28);
+  }
+
+  /* Horizontal rule */
+  .tiptap-wrapper.tiptap-wrapper hr {
+    border-top-color: #293543;
+  }
+
+  /* Image */
+  .tiptap-wrapper.tiptap-wrapper img {
+    opacity: 0.94;
+  }
+
+  /* Table */
+  .tiptap-wrapper.tiptap-wrapper .tableWrapper {
+    scrollbar-color: #354456 transparent;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper .tableWrapper::-webkit-scrollbar-thumb {
+    background: #354456;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper .tableWrapper:hover::-webkit-scrollbar-thumb {
+    background: #4A5B6F;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table {
+    border-color: #293543;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.34);
+    background: #151C24;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table td,
+  .tiptap-wrapper.tiptap-wrapper table th {
+    border-color: #293543;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table th {
+    background: #1E2935;
+    color: #f6f8fa;
+    border-bottom-color: #354456;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table th p,
+  .tiptap-wrapper.tiptap-wrapper table th strong,
+  .tiptap-wrapper.tiptap-wrapper table th span {
+    color: inherit;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table th:hover {
+    background: #253343;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table th:first-child {
+    border-left-color: #293543;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table th:last-child {
+    border-right-color: #293543;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table td {
+    background: #151C24;
+    color: #bbc7d4;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table td:hover {
+    background: #1E2935;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table td:focus {
+    outline: 2px solid #79c0ff;
+    outline-offset: -2px;
+    background: #183047;
+    box-shadow: inset 0 0 0 1px #79c0ff;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table td p,
+  .tiptap-wrapper.tiptap-wrapper table td span {
+    color: inherit;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table td:first-child {
+    border-left-color: #293543;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table td:last-child {
+    border-right-color: #293543;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table tr:hover td {
+    background: #1E2935;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table tr:nth-child(even) td {
+    background: #18212A;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table tr:nth-child(even) td:hover {
+    background: #1E2935;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table tr:last-child td {
+    border-bottom-color: #293543;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table thead tr {
+    background: #1E2935;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table thead tr:hover th {
+    background: #253343;
+  }
+
+  /* Selected cell — dark */
+  .tiptap-wrapper.tiptap-wrapper .selectedCell {
+    background-color: rgba(121, 192, 255, 0.20) !important;
+    box-shadow: inset 0 0 0 2px #79c0ff !important;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper .selectedCell::after {
+    background: rgba(121, 192, 255, 0.14);
+  }
+
+  .tiptap-wrapper.tiptap-wrapper .column-resize-handle {
+    background-color: #79c0ff;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper .column-resize-handle:hover {
+    background-color: #aad7ff;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table:hover .column-resize-handle {
+    opacity: 0.45;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper table:hover .column-resize-handle:hover {
+    opacity: 1;
+  }
+
+  /* Code block — dark adjustments */
+  .tiptap-wrapper.tiptap-wrapper .code-block-wrapper,
+  .tiptap-wrapper.tiptap-wrapper pre {
+    background: #060A0F !important;
+    border-color: #273544;
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.54);
+  }
+
+  .tiptap-wrapper.tiptap-wrapper .code-block-wrapper:hover,
+  .tiptap-wrapper.tiptap-wrapper pre:hover {
+    transform: none;
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.54);
+    border-color: #3A4A5C;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper .code-block-wrapper .code-block-toolbar {
+    background: #05080C;
+    border-bottom-color: #1C2835;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper .code-block-wrapper .code-block-language-label {
+    color: #94a3b3;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper .code-block-wrapper .code-block-language-select {
+    background-color: #060A0F;
+    border-color: #273544;
+    color: #d6dee8;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper .code-block-wrapper .code-block-language-select:hover {
+    background-color: #161d26;
+    border-color: #4A5B6F;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper .code-block-wrapper .code-block-language-select:focus {
+    border-color: #79C0FF;
+    box-shadow: 0 0 0 2px rgba(121, 192, 255, 0.24);
+  }
+
+  .tiptap-wrapper.tiptap-wrapper .code-block-wrapper .code-block-language-select option {
+    background: #05080C;
+    color: #d6dee8;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper pre {
+    color: #c9d1d9;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper pre::before {
+    background: #05080C;
+    border-bottom-color: #1C2835;
+    color: #94a3b3;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper pre > code::-webkit-scrollbar-thumb {
+    background: #273544;
+    background-clip: content-box;
+  }
+
+  .tiptap-wrapper.tiptap-wrapper pre > code::-webkit-scrollbar-thumb:hover {
+    background: #4A5B6F;
+    background-clip: content-box;
+  }
+
+}
+
+html:has(.tiptap-wrapper) {
+  font-size: 16px !important;
+}

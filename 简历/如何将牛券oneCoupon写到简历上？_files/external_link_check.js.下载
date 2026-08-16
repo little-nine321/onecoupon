@@ -1,0 +1,71 @@
+(function () {
+    const EXTERNAL_LINK_TEST = "https://wx.test.zsxq.com/mweb/external_link.html";
+    const EXTERNAL_LINK = "https://wx.zsxq.com/mweb/external_link.html";
+
+    const ALLOWED_EXTERNAL_LINK_DOMAINS = [
+        "*.zsxq.com",
+        "*.xiaomiquan.com",
+        "qiyukf.com",
+        "*.weixin.qq.com",
+        "*.feishu.cn",
+        "scys.com",
+        "aipoju.com",
+        "taojin66.com",
+        "aipoju.com",
+        "ttq.gz.cn",
+        "codefather.cn",
+        "code-nav.cn",
+        "xianjianaiedu.com",
+        "xianjianaiedu.top",
+        "aiawaken.top",
+        "qisisay.com",
+        "biglongxia.com",
+        "dkfile.net",
+        "dkfile.com",
+        "51kuajing.com",
+        "ss-data.cc",
+        "ads.org.cn",
+        "aismrti.com",
+        "kanbenzhi.com",
+        "paicoding.com",
+        "xiaoyuchuhai.com",
+        "dc401.com",
+        "idoxu.com",
+        "javaguide.cn",
+        "cheemao.com",
+    ];
+
+    function linkClickListener(event) {
+        const allowedExternalLink = ALLOWED_EXTERNAL_LINK_DOMAINS.some((domain) => {
+            const targetHost = event.target.hostname;
+            if (domain.startsWith("*.")) {
+                const baseDomain = domain.substring(2);
+                return targetHost === baseDomain || targetHost.endsWith(`.${baseDomain}`);
+            }
+            return targetHost === domain
+        });
+
+        if (allowedExternalLink) {
+            return;
+        }
+        event.preventDefault();
+
+        const currDomain = window.location.hostname;
+        const baseExternalLink = (currDomain.includes(".test.") || currDomain.includes(".dev.")) ? EXTERNAL_LINK_TEST : EXTERNAL_LINK;
+
+        const targetUrl = event.target.href;
+        const redirectUrl = `${baseExternalLink}?target=${encodeURIComponent(targetUrl)}`;
+
+        if (event.target.target === "_blank") {
+            window.open(redirectUrl, "_blank");
+        } else {
+            window.location.href = redirectUrl;
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll("a").forEach((aElem) => {
+            aElem.addEventListener("click", linkClickListener);
+        });
+    });
+})();

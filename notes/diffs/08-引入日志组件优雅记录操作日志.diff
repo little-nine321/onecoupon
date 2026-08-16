@@ -1,0 +1,600 @@
+﻿diff --git a/merchant-admin/pom.xml b/merchant-admin/pom.xml
+index bb86b1b..73d3a34 100644
+--- a/merchant-admin/pom.xml
++++ b/merchant-admin/pom.xml
+@@ -46,6 +46,11 @@
+             <artifactId>transmittable-thread-local</artifactId>
+         </dependency>
+ 
++        <dependency>
++            <groupId>io.github.mouzt</groupId>
++            <artifactId>bizlog-sdk</artifactId>
++        </dependency>
++
+         <!-- 数据库持久层相关依赖 -->
+         <dependency>
+             <groupId>com.mysql</groupId>
+diff --git a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/MerchantAdminApplication.java b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/MerchantAdminApplication.java
+index 8f346ef..573b7b7 100644
+--- a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/MerchantAdminApplication.java
++++ b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/MerchantAdminApplication.java
+@@ -34,6 +34,7 @@
+ 
+ package com.nageoffer.onecoupon.merchant.admin;
+ 
++import com.mzt.logapi.starter.annotation.EnableLogRecord;
+ import org.mybatis.spring.annotation.MapperScan;
+ import org.springframework.boot.SpringApplication;
+ import org.springframework.boot.autoconfigure.SpringBootApplication;
+@@ -46,6 +47,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
+  * 开发时间：2024-07-08
+  */
+ @SpringBootApplication
++@EnableLogRecord(tenant = "MerchantAdmin")
+ @MapperScan("com.nageoffer.onecoupon.merchant.admin.dao.mapper")
+ public class MerchantAdminApplication {
+ 
+diff --git a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/common/log/CommonEnumParseFunction.java b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/common/log/CommonEnumParseFunction.java
+new file mode 100644
+index 0000000..4afe798
+--- /dev/null
++++ b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/common/log/CommonEnumParseFunction.java
+@@ -0,0 +1,89 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.merchant.admin.common.log;
++
++import cn.hutool.core.util.StrUtil;
++import com.mzt.logapi.service.IParseFunction;
++import com.nageoffer.onecoupon.merchant.admin.common.enums.DiscountTargetEnum;
++import com.nageoffer.onecoupon.merchant.admin.common.enums.DiscountTypeEnum;
++import org.springframework.stereotype.Component;
++
++import java.util.List;
++
++/**
++ * 操作日志组件解析枚举值对应描述信息
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-09
++ */
++@Component
++public class CommonEnumParseFunction implements IParseFunction {
++
++    public static final String DISCOUNT_TARGET_ENUM_NAME = DiscountTargetEnum.class.getSimpleName();
++    private static final String DISCOUNT_TYPE_ENUM_NAME = DiscountTypeEnum.class.getSimpleName();
++
++    @Override
++    public String functionName() {
++        return "COMMON_ENUM_PARSE";
++    }
++
++    @Override
++    public String apply(Object value) {
++        try {
++            List<String> parts = StrUtil.split(value.toString(), "_");
++            if (parts.size() != 2) {
++                throw new IllegalArgumentException("格式错误，需要 '枚举类_具体值' 的形式。");
++            }
++
++            String enumClassName = parts.get(0);
++            int enumValue = Integer.parseInt(parts.get(1));
++
++            return findEnumValueByName(enumClassName, enumValue);
++        } catch (NumberFormatException e) {
++            throw new IllegalArgumentException("第二个下划线后面的值需要是整数。", e);
++        }
++    }
++
++    private String findEnumValueByName(String enumClassName, int enumValue) {
++        if (DISCOUNT_TARGET_ENUM_NAME.equals(enumClassName)) {
++            return DiscountTargetEnum.findValueByType(enumValue);
++        } else if (DISCOUNT_TYPE_ENUM_NAME.equals(enumClassName)) {
++            return DiscountTypeEnum.findValueByType(enumValue);
++        } else {
++            throw new IllegalArgumentException("未知的枚举类名: " + enumClassName);
++        }
++    }
++}
+diff --git a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dao/entity/CouponTemplateLogDO.java b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dao/entity/CouponTemplateLogDO.java
+new file mode 100644
+index 0000000..061a0eb
+--- /dev/null
++++ b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dao/entity/CouponTemplateLogDO.java
+@@ -0,0 +1,101 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.merchant.admin.dao.entity;
++
++import com.baomidou.mybatisplus.annotation.FieldFill;
++import com.baomidou.mybatisplus.annotation.TableField;
++import com.baomidou.mybatisplus.annotation.TableName;
++import lombok.AllArgsConstructor;
++import lombok.Builder;
++import lombok.Data;
++import lombok.NoArgsConstructor;
++
++import java.util.Date;
++
++/**
++ * 优惠券模板操作日志数据库持久层实体
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-09
++ */
++@Data
++@NoArgsConstructor
++@AllArgsConstructor
++@Builder
++@TableName("t_coupon_template_log")
++public class CouponTemplateLogDO {
++
++    /**
++     * id
++     */
++    private Long id;
++
++    /**
++     * 店铺编号
++     */
++    private Long shopNumber;
++
++    /**
++     * 优惠券模板ID
++     */
++    private String couponTemplateId;
++
++    /**
++     * 操作人
++     */
++    private String operatorId;
++
++    /**
++     * 操作日志
++     */
++    private String operationLog;
++
++    /**
++     * 原始数据
++     */
++    private String originalData;
++
++    /**
++     * 修改后数据
++     */
++    private String modifiedData;
++
++    /**
++     * 创建时间
++     */
++    @TableField(fill = FieldFill.INSERT)
++    private Date createTime;
++}
+diff --git a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dao/mapper/CouponTemplateLogMapper.java b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dao/mapper/CouponTemplateLogMapper.java
+new file mode 100644
+index 0000000..61c97db
+--- /dev/null
++++ b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dao/mapper/CouponTemplateLogMapper.java
+@@ -0,0 +1,48 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.merchant.admin.dao.mapper;
++
++import com.baomidou.mybatisplus.core.mapper.BaseMapper;
++import com.nageoffer.onecoupon.merchant.admin.dao.entity.CouponTemplateLogDO;
++
++/**
++ * 优惠券模板操作日志数据库持久层
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-09
++ */
++public interface CouponTemplateLogMapper extends BaseMapper<CouponTemplateLogDO> {
++}
+diff --git a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/service/basics/log/DBLogRecordServiceImpl.java b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/service/basics/log/DBLogRecordServiceImpl.java
+new file mode 100644
+index 0000000..b59981f
+--- /dev/null
++++ b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/service/basics/log/DBLogRecordServiceImpl.java
+@@ -0,0 +1,95 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.merchant.admin.service.basics.log;
++
++import cn.hutool.core.util.StrUtil;
++import com.mzt.logapi.beans.LogRecord;
++import com.mzt.logapi.context.LogRecordContext;
++import com.mzt.logapi.service.ILogRecordService;
++import com.nageoffer.onecoupon.merchant.admin.common.context.UserContext;
++import com.nageoffer.onecoupon.merchant.admin.dao.entity.CouponTemplateLogDO;
++import com.nageoffer.onecoupon.merchant.admin.dao.mapper.CouponTemplateLogMapper;
++import lombok.RequiredArgsConstructor;
++import lombok.extern.slf4j.Slf4j;
++import org.springframework.stereotype.Service;
++
++import java.util.List;
++import java.util.Optional;
++
++/**
++ * 保存操作日志新增到数据库
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-09
++ */
++@Slf4j
++@Service
++@RequiredArgsConstructor
++public class DBLogRecordServiceImpl implements ILogRecordService {
++
++    private final CouponTemplateLogMapper couponTemplateLogMapper;
++
++    @Override
++    public void record(LogRecord logRecord) {
++        try {
++            switch (logRecord.getType()) {
++                case "CouponTemplate": {
++                    CouponTemplateLogDO couponTemplateLogDO = CouponTemplateLogDO.builder()
++                            .couponTemplateId(logRecord.getBizNo())
++                            .shopNumber(UserContext.getShopNumber())
++                            .operatorId(UserContext.getUserId())
++                            .operationLog(logRecord.getAction())
++                            .originalData(Optional.ofNullable(LogRecordContext.getVariable("originalData")).map(Object::toString).orElse(null))
++                            .modifiedData(StrUtil.isBlank(logRecord.getExtra()) ? null : logRecord.getExtra())
++                            .build();
++                    couponTemplateLogMapper.insert(couponTemplateLogDO);
++                }
++            }
++        } catch (Exception ex) {
++            log.error("记录[{}]操作日志失败", logRecord.getType(), ex);
++        }
++    }
++
++    @Override
++    public List<LogRecord> queryLog(String bizNo, String type) {
++        return List.of();
++    }
++
++    @Override
++    public List<LogRecord> queryLogByBizNo(String bizNo, String type, String subType) {
++        return List.of();
++    }
++}
+diff --git a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/service/impl/CouponTemplateServiceImpl.java b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/service/impl/CouponTemplateServiceImpl.java
+index 2d8f30c..4ef802f 100644
+--- a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/service/impl/CouponTemplateServiceImpl.java
++++ b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/service/impl/CouponTemplateServiceImpl.java
+@@ -35,10 +35,9 @@
+ package com.nageoffer.onecoupon.merchant.admin.service.impl;
+ 
+ import cn.hutool.core.bean.BeanUtil;
+-import cn.hutool.core.util.ObjectUtil;
+-import cn.hutool.core.util.StrUtil;
+-import com.alibaba.fastjson2.JSON;
+ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
++import com.mzt.logapi.context.LogRecordContext;
++import com.mzt.logapi.starter.annotation.LogRecord;
+ import com.nageoffer.onecoupon.framework.exception.ClientException;
+ import com.nageoffer.onecoupon.merchant.admin.common.constant.MerchantAdminRedisConstant;
+ import com.nageoffer.onecoupon.merchant.admin.common.context.UserContext;
+@@ -46,6 +45,8 @@ import com.nageoffer.onecoupon.merchant.admin.common.enums.CouponTemplateStatusE
+ import com.nageoffer.onecoupon.merchant.admin.common.enums.DiscountTargetEnum;
+ import com.nageoffer.onecoupon.merchant.admin.common.enums.DiscountTypeEnum;
+ import com.nageoffer.onecoupon.merchant.admin.dao.entity.CouponTemplateDO;
++import com.nageoffer.onecoupon.merchant.admin.dao.entity.CouponTemplateLogDO;
++import com.nageoffer.onecoupon.merchant.admin.dao.mapper.CouponTemplateLogMapper;
+ import com.nageoffer.onecoupon.merchant.admin.dao.mapper.CouponTemplateMapper;
+ import com.nageoffer.onecoupon.merchant.admin.dto.req.CouponTemplateSaveReqDTO;
+ import com.nageoffer.onecoupon.merchant.admin.dto.resp.CouponTemplateQueryRespDTO;
+@@ -79,6 +80,22 @@ public class CouponTemplateServiceImpl extends ServiceImpl<CouponTemplateMapper,
+     private final MerchantAdminChainContext merchantAdminChainContext;
+     private final StringRedisTemplate stringRedisTemplate;
+ 
++    @LogRecord(
++            success = """
++                    创建优惠券：{{#requestParam.name}}， \
++                    优惠对象：{COMMON_ENUM_PARSE{'DiscountTargetEnum' + '_' + #requestParam.target}}， \
++                    优惠类型：{COMMON_ENUM_PARSE{'DiscountTypeEnum' + '_' + #requestParam.type}}， \
++                    库存数量：{{#requestParam.stock}}， \
++                    优惠商品编码：{{#requestParam.goods}}， \
++                    有效期开始时间：{{#requestParam.validStartTime}}， \
++                    有效期结束时间：{{#requestParam.validEndTime}}， \
++                    领取规则：{{#requestParam.receiveRule}}， \
++                    消耗规则：{{#requestParam.consumeRule}};
++                    """,
++            type = "CouponTemplate",
++            bizNo = "{{#bizNo}}",
++            extra = "{{#requestParam.toString()}}"
++    )
+     @Override
+     public void createCouponTemplate(CouponTemplateSaveReqDTO requestParam) {
+         // 通过责任链验证请求参数是否正确
+@@ -90,6 +107,9 @@ public class CouponTemplateServiceImpl extends ServiceImpl<CouponTemplateMapper,
+         couponTemplateDO.setShopNumber(UserContext.getShopNumber());
+         couponTemplateMapper.insert(couponTemplateDO);
+ 
++        // 因为模板 ID 是运行中生成的，@LogRecord 默认拿不到，所以我们需要手动设置
++        LogRecordContext.putVariable("bizNo", couponTemplateDO.getId());
++
+         // 缓存预热：通过将数据库的记录序列化成 JSON 字符串放入 Redis 缓存
+         CouponTemplateQueryRespDTO actualRespDTO = BeanUtil.toBean(couponTemplateDO, CouponTemplateQueryRespDTO.class);
+         Map<String, Object> cacheTargetMap = BeanUtil.beanToMap(actualRespDTO, false, true);
+diff --git a/merchant-admin/src/main/resources/shardingsphere-config.yaml b/merchant-admin/src/main/resources/shardingsphere-config.yaml
+index dba5155..2f4cca3 100644
+--- a/merchant-admin/src/main/resources/shardingsphere-config.yaml
++++ b/merchant-admin/src/main/resources/shardingsphere-config.yaml
+@@ -58,6 +58,16 @@ rules:
+           standard: # 单分片键分表
+             shardingColumn: shop_number # 分片键
+             shardingAlgorithmName: coupon_template_table_mod # 表分片算法名称，对应 rules[0].shardingAlgorithms
++      t_coupon_template_log:
++        actualDataNodes: ds_${0..1}.t_coupon_template_log_${0..15}
++        databaseStrategy:
++          standard:
++            shardingColumn: shop_number
++            shardingAlgorithmName: coupon_template_log_database_mod
++        tableStrategy:
++          standard:
++            shardingColumn: shop_number
++            shardingAlgorithmName: coupon_template_log_table_mod
+     shardingAlgorithms: # 分片算法定义集合
+       coupon_template_database_mod: # 优惠券分库算法定义
+         type: CLASS_BASED # 根据自定义库分片算法类进行分片
+@@ -72,6 +82,17 @@ rules:
+           # 自定义表分片算法Class
+           algorithmClassName: com.nageoffer.onecoupon.merchant.admin.dao.sharding.TableHashModShardingAlgorithm
+           strategy: standard # 分片类型，单字段分片
++      coupon_template_log_database_mod:
++        type: CLASS_BASED
++        props:
++          algorithmClassName: com.nageoffer.onecoupon.merchant.admin.dao.sharding.DBHashModShardingAlgorithm
++          sharding-count: 16
++          strategy: standard
++      coupon_template_log_table_mod:
++        type: CLASS_BASED
++        props:
++          algorithmClassName: com.nageoffer.onecoupon.merchant.admin.dao.sharding.TableHashModShardingAlgorithm
++          strategy: standard
+ 
+ props:
+   # 配置 ShardingSphere 默认打印 SQL 执行语句
+diff --git a/merchant-admin/src/test/java/com/nageoffer/onecoupon/merchant/admin/template/spel/CouponTemplateLogSpELTests.java b/merchant-admin/src/test/java/com/nageoffer/onecoupon/merchant/admin/template/spel/CouponTemplateLogSpELTests.java
+new file mode 100644
+index 0000000..f6801ed
+--- /dev/null
++++ b/merchant-admin/src/test/java/com/nageoffer/onecoupon/merchant/admin/template/spel/CouponTemplateLogSpELTests.java
+@@ -0,0 +1,103 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.merchant.admin.template.spel;
++
++import cn.hutool.core.lang.Assert;
++import com.nageoffer.onecoupon.merchant.admin.common.context.UserContext;
++import com.nageoffer.onecoupon.merchant.admin.common.context.UserInfoDTO;
++import org.junit.jupiter.api.Test;
++import org.springframework.expression.Expression;
++import org.springframework.expression.ExpressionParser;
++import org.springframework.expression.spel.standard.SpelExpressionParser;
++
++/**
++ * SpEL 表达式测试类
++ */
++public class CouponTemplateLogSpELTests {
++
++    /**
++     * 调用静态类方法
++     */
++    @Test
++    public void testSpELGetRandom() {
++        String spELKey = "T(java.lang.Math).random()";
++        ExpressionParser parser = new SpelExpressionParser();
++        Expression expression = parser.parseExpression(spELKey);
++        Assert.isTrue(expression.getValue() instanceof Double);
++    }
++
++    /**
++     * 调用静态类方法并运算
++     */
++    @Test
++    public void testSpELGetRandomV2() {
++        String spELKey = "T(java.lang.Math).random() * 100.0";
++        ExpressionParser parser = new SpelExpressionParser();
++        Expression expression = parser.parseExpression(spELKey);
++        Assert.isTrue(expression.getValue() instanceof Double);
++    }
++
++    /**
++     * 调用当前登录用户静态类方法
++     */
++    @Test
++    public void testSpELGetCurrentUser() {
++        // 初始化数据
++        String userid = "1810518709471555585";
++        UserContext.setUser(new UserInfoDTO(userid, "pdd45305558318", 1810714735922956666L));
++
++        // 调用用户上下文获取当前用户 ID
++        String spELKey = "T(com.nageoffer.onecoupon.merchant.admin.common.context.UserContext).getUserId()";
++        ExpressionParser parser = new SpelExpressionParser();
++        Expression expression = parser.parseExpression(spELKey);
++        try {
++            Assert.equals(expression.getValue(), userid);
++        } finally {
++            UserContext.removeUser();
++        }
++    }
++
++    /**
++     * 调用当前登录用户静态类方法，如果为空取默认值
++     */
++    @Test
++    public void testSpELGetCurrentUserDefaultValue() {
++        // 调用用户上下文获取当前用户 ID，如果为空，取默认值
++        String spELKey = "T(com.nageoffer.onecoupon.merchant.admin.common.context.UserContext).getUserId() ?: 'ding.ma'";
++        ExpressionParser parser = new SpelExpressionParser();
++        Expression expression = parser.parseExpression(spELKey);
++        Assert.equals(expression.getValue(), "ding.ma");
++    }
++}

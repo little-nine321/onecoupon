@@ -1,0 +1,19 @@
+第 35 小节是“常见面试问题汇总”，不是新增业务功能开发小节。
+
+本地远程分支中没有找到独立的第 35 小节代码分支，也没有对应的功能 diff。
+
+本节文档基于以下材料整理：
+
+1. 本地教程：
+   D:\study\java\oneCoupon\第⑤章节：面试服务\《牛券oneCoupon优惠券系统设计》第35小节：常见面试问题汇总.html
+
+2. 前面章节已经生成的学习文档：
+   D:\study\java\oneCoupon\notes\chapter-01
+   D:\study\java\oneCoupon\notes\chapter-02
+   D:\study\java\oneCoupon\notes\chapter-03
+   D:\study\java\oneCoupon\notes\chapter-04
+
+3. 项目最终代码：
+   D:\study\java\oneCoupon\code\onecoupon
+
+阅读本节时，应把它当作“全项目复盘与面试表达文档”，重点不是某个分支改了哪些代码，而是能否说明每个设计选择的业务背景、技术取舍、项目落点和验证方式。

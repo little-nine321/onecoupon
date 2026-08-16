@@ -1,0 +1,11 @@
+﻿本小节未找到与教程标题完全对应的独立远程分支差异。
+
+教程文件：
+D:\study\java\oneCoupon\第③章节：分发&引擎服务\《牛券oneCoupon优惠券系统设计》第21小节：优惠券分发失败记录深分页优化.html
+
+说明：
+第 21 小节讲解的深分页优化，核心代码体现在分发任务失败记录导出时使用 id 游标分页：
+WHERE batch_id = ? AND id > maxId LIMIT 5000
+
+该逻辑在第 20 小节目标分支 origin/20240831_dev_coupon-distribute-v2_easyexcel-cache_ding.ma 的 CouponExecuteDistributionConsumer#listUserCouponTaskFail 中已经存在。
+因此本附录不提供独立 git diff，而在正文中基于该方法详细解释。

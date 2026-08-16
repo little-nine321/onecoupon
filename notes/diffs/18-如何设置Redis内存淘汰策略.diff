@@ -1,0 +1,8 @@
+本小节未发现独立代码分支差异。
+
+教程文件：
+D:\study\java\oneCoupon\第③章节：分发&引擎服务\《牛券oneCoupon优惠券系统设计》第18小节：如何设置Redis内存淘汰策略？.html
+
+说明：
+第 18 小节主要讲 Redis maxmemory、maxmemory-policy、LRU、LFU、TTL、noeviction 等内存淘汰策略，
+属于 Redis 配置与原理教学内容，不对应本仓库新的 Java 代码修改。

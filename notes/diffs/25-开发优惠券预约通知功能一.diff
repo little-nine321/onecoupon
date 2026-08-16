@@ -1,0 +1,871 @@
+﻿diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/common/enums/CouponRemindTypeEnum.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/common/enums/CouponRemindTypeEnum.java
+new file mode 100644
+index 0000000..5d909b7
+--- /dev/null
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/common/enums/CouponRemindTypeEnum.java
+@@ -0,0 +1,82 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.engine.common.enums;
++
++import lombok.Getter;
++import lombok.RequiredArgsConstructor;
++
++/**
++ * 预约提醒方式枚举类，值必须是0，1，2，3......
++ * <p>
++ * 作者：优雅
++ * 加项目群：早加入就是优势！500人内部沟通群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-16
++ */
++@RequiredArgsConstructor
++public enum CouponRemindTypeEnum {
++
++    /**
++     * App 通知
++     */
++    EMAIL(0, "App通知"),
++
++    /**
++     * 邮件提醒
++     */
++    MESSAGE(1, "邮件提醒");
++
++    @Getter
++    private final int type;
++    @Getter
++    private final String describe;
++
++    public static CouponRemindTypeEnum getByType(Integer type) {
++        for (CouponRemindTypeEnum remindEnum : values()) {
++            if (remindEnum.getType() == type) {
++                return remindEnum;
++            }
++        }
++        return null;
++    }
++
++    public static String getDescribeByType(Integer type) {
++        for (CouponRemindTypeEnum remindEnum : values()) {
++            if (remindEnum.getType() == type) {
++                return remindEnum.getDescribe();
++            }
++        }
++        return null;
++    }
++}
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/controller/CouponTemplateRemindController.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/controller/CouponTemplateRemindController.java
+new file mode 100644
+index 0000000..52ba9b9
+--- /dev/null
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/controller/CouponTemplateRemindController.java
+@@ -0,0 +1,70 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.engine.controller;
++
++import com.nageoffer.onecoupon.engine.dto.req.CouponTemplateRemindCreateReqDTO;
++import com.nageoffer.onecoupon.engine.service.CouponTemplateRemindService;
++import com.nageoffer.onecoupon.framework.idempotent.NoDuplicateSubmit;
++import com.nageoffer.onecoupon.framework.result.Result;
++import com.nageoffer.onecoupon.framework.web.Results;
++import io.swagger.v3.oas.annotations.Operation;
++import io.swagger.v3.oas.annotations.tags.Tag;
++import lombok.RequiredArgsConstructor;
++import org.springframework.web.bind.annotation.PostMapping;
++import org.springframework.web.bind.annotation.RequestBody;
++import org.springframework.web.bind.annotation.RestController;
++
++/**
++ * 优惠券模板控制层
++ * <p>
++ * 作者：优雅
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-16
++ */
++@RestController
++@RequiredArgsConstructor
++@Tag(name = "优惠券预约提醒管理")
++public class CouponTemplateRemindController {
++
++    private final CouponTemplateRemindService couponTemplateRemindService;
++
++    @Operation(summary = "发出优惠券预约提醒请求")
++    @NoDuplicateSubmit(message = "请勿短时间内重复提交预约提醒请求")
++    @PostMapping("/api/engine/coupon-template-remind/create")
++    public Result<Void> createCouponRemind(@RequestBody CouponTemplateRemindCreateReqDTO requestParam) {
++        couponTemplateRemindService.createCouponRemind(requestParam);
++        return Results.success();
++    }
++}
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/dao/entity/CouponTemplateRemindDO.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/dao/entity/CouponTemplateRemindDO.java
+new file mode 100644
+index 0000000..6a65168
+--- /dev/null
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/dao/entity/CouponTemplateRemindDO.java
+@@ -0,0 +1,83 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.engine.dao.entity;
++
++import com.baomidou.mybatisplus.annotation.TableName;
++import lombok.AllArgsConstructor;
++import lombok.Builder;
++import lombok.Data;
++import lombok.NoArgsConstructor;
++
++import java.util.Date;
++
++/**
++ * 用户预约提醒信息存储数据库持久层实体
++ * <p>
++ * 作者：优雅
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-15
++ */
++@Data
++@NoArgsConstructor
++@AllArgsConstructor
++@Builder
++@TableName("t_coupon_template_remind")
++public class CouponTemplateRemindDO {
++
++    /**
++     * 用户id
++     */
++    private Long userId;
++
++    /**
++     * 券id
++     */
++    private Long couponTemplateId;
++
++    /**
++     * 用户预约信息，用位图存储信息
++     */
++    private Long information;
++
++    /**
++     * 店铺编号
++     */
++    private Long shopNumber;
++
++    /**
++     * 优惠券开抢时间
++     */
++    private Date startTime;
++}
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/dao/mapper/CouponTemplateRemindMapper.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/dao/mapper/CouponTemplateRemindMapper.java
+new file mode 100644
+index 0000000..cca424c
+--- /dev/null
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/dao/mapper/CouponTemplateRemindMapper.java
+@@ -0,0 +1,48 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.engine.dao.mapper;
++
++import com.baomidou.mybatisplus.core.mapper.BaseMapper;
++import com.nageoffer.onecoupon.engine.dao.entity.CouponTemplateRemindDO;
++
++/**
++ * 用户预约提醒信息存储数据库持久层
++ * <p>
++ * 作者：优雅
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-15
++ */
++public interface CouponTemplateRemindMapper extends BaseMapper<CouponTemplateRemindDO> {
++}
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/dto/req/CouponTemplateQueryReqDTO.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/dto/req/CouponTemplateQueryReqDTO.java
+index 3983058..f88520c 100644
+--- a/engine/src/main/java/com/nageoffer/onecoupon/engine/dto/req/CouponTemplateQueryReqDTO.java
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/dto/req/CouponTemplateQueryReqDTO.java
+@@ -35,7 +35,9 @@
+ package com.nageoffer.onecoupon.engine.dto.req;
+ 
+ import io.swagger.v3.oas.annotations.media.Schema;
++import lombok.AllArgsConstructor;
+ import lombok.Data;
++import lombok.NoArgsConstructor;
+ 
+ /**
+  * 优惠券模板查询接口请求参数实体
+@@ -45,6 +47,8 @@ import lombok.Data;
+  * 开发时间：2024-07-14
+  */
+ @Data
++@NoArgsConstructor
++@AllArgsConstructor
+ @Schema(description = "优惠券模板查询请求参数实体")
+ public class CouponTemplateQueryReqDTO {
+ 
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/dto/req/CouponTemplateRemindCreateReqDTO.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/dto/req/CouponTemplateRemindCreateReqDTO.java
+new file mode 100644
+index 0000000..1747c80
+--- /dev/null
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/dto/req/CouponTemplateRemindCreateReqDTO.java
+@@ -0,0 +1,74 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.engine.dto.req;
++
++import io.swagger.v3.oas.annotations.media.Schema;
++import lombok.Data;
++
++/**
++ * 创建抢券预约提醒接口请求参数实体
++ * <p>
++ * 作者：优雅
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-16
++ */
++@Data
++@Schema(description = "优惠券预约抢券提醒请求参数实体")
++public class CouponTemplateRemindCreateReqDTO {
++
++    /**
++     * 优惠券模板id
++     */
++    @Schema(description = "优惠券模板id", example = "1810966706881941507", required = true)
++    private String couponTemplateId;
++
++    /**
++     * 店铺编号
++     */
++    @Schema(description = "店铺编号", example = "1810714735922956666", required = true)
++    private String shopNumber;
++
++    /**
++     * 提醒方式
++     */
++    @Schema(description = "提醒方式", example = "0", required = true)
++    private Integer type;
++
++    /**
++     * 提醒时间，比如五分钟，十分钟，十五分钟
++     */
++    @Schema(description = "提醒时间", example = "5", required = true)
++    private Integer remindTime;
++}
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/mq/event/CouponRemindDelayEvent.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/mq/event/CouponRemindDelayEvent.java
+new file mode 100644
+index 0000000..94f8a2b
+--- /dev/null
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/mq/event/CouponRemindDelayEvent.java
+@@ -0,0 +1,98 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.engine.mq.event;
++
++import com.fasterxml.jackson.annotation.JsonFormat;
++import lombok.AllArgsConstructor;
++import lombok.Builder;
++import lombok.Data;
++import lombok.NoArgsConstructor;
++
++import java.util.Date;
++
++/**
++ * 优惠券提醒抢券事件
++ * <p>
++ * 作者：优雅
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-21
++ */
++@Data
++@Builder
++@NoArgsConstructor
++@AllArgsConstructor
++public class CouponRemindDelayEvent {
++
++    /**
++     * 优惠券模板id
++     */
++    private String couponTemplateId;
++
++    /**
++     * 店铺编号
++     */
++    private String shopNumber;
++
++    /**
++     * 用户id
++     */
++    private String userId;
++
++    /**
++     * 用户联系方式，可能是邮箱、手机号、等等
++     */
++    private String contact;
++
++    /**
++     * 提醒方式
++     */
++    private Integer type;
++
++    /**
++     * 提醒时间，比如五分钟，十分钟，十五分钟
++     */
++    private Integer remindTime;
++
++    /**
++     * 开抢时间
++     */
++    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
++    private Date startTime;
++
++    /**
++     * 具体延迟时间
++     */
++    private Long delayTime;
++}
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/mq/producer/CouponRemindDelayProducer.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/mq/producer/CouponRemindDelayProducer.java
+new file mode 100644
+index 0000000..62e79af
+--- /dev/null
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/mq/producer/CouponRemindDelayProducer.java
+@@ -0,0 +1,90 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.engine.mq.producer;
++
++import cn.hutool.core.util.StrUtil;
++import com.nageoffer.onecoupon.engine.mq.base.BaseSendExtendDTO;
++import com.nageoffer.onecoupon.engine.mq.base.MessageWrapper;
++import com.nageoffer.onecoupon.engine.mq.event.CouponRemindDelayEvent;
++import lombok.extern.slf4j.Slf4j;
++import org.apache.rocketmq.common.message.MessageConst;
++import org.apache.rocketmq.spring.core.RocketMQTemplate;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.core.env.ConfigurableEnvironment;
++import org.springframework.messaging.Message;
++import org.springframework.messaging.support.MessageBuilder;
++import org.springframework.stereotype.Component;
++
++import java.util.UUID;
++
++/**
++ * 提醒抢券生产者
++ * <p>
++ * 作者：优雅
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-21
++ */
++@Slf4j
++@Component
++public class CouponRemindDelayProducer extends AbstractCommonSendProduceTemplate<CouponRemindDelayEvent> {
++
++    private final ConfigurableEnvironment environment;
++
++    public CouponRemindDelayProducer(@Autowired RocketMQTemplate rocketMQTemplate, @Autowired ConfigurableEnvironment environment) {
++        super(rocketMQTemplate);
++        this.environment = environment;
++    }
++
++    @Override
++    protected BaseSendExtendDTO buildBaseSendExtendParam(CouponRemindDelayEvent messageSendEvent) {
++        return BaseSendExtendDTO.builder()
++                .eventName("提醒用户抢券")
++                .keys(messageSendEvent.getUserId() + ":" + messageSendEvent.getCouponTemplateId())
++                .topic(environment.resolvePlaceholders("one-coupon_engine-service_coupon-remind_topic${unique-name:}"))
++                .sentTimeout(2000L)
++                .delayTime(messageSendEvent.getDelayTime())
++                .build();
++    }
++
++    @Override
++    protected Message<?> buildMessage(CouponRemindDelayEvent messageSendEvent, BaseSendExtendDTO requestParam) {
++        String keys = StrUtil.isEmpty(requestParam.getKeys()) ? UUID.randomUUID().toString() : requestParam.getKeys();
++        return MessageBuilder
++                .withPayload(new MessageWrapper(keys, messageSendEvent))
++                .setHeader(MessageConst.PROPERTY_KEYS, keys)
++                .setHeader(MessageConst.PROPERTY_TAGS, requestParam.getTag())
++                .build();
++    }
++}
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/service/CouponTemplateRemindService.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/service/CouponTemplateRemindService.java
+new file mode 100644
+index 0000000..913f3a7
+--- /dev/null
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/service/CouponTemplateRemindService.java
+@@ -0,0 +1,56 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.engine.service;
++
++import com.baomidou.mybatisplus.extension.service.IService;
++import com.nageoffer.onecoupon.engine.dao.entity.CouponTemplateRemindDO;
++import com.nageoffer.onecoupon.engine.dto.req.CouponTemplateRemindCreateReqDTO;
++
++/**
++ * 优惠券预约提醒业务逻辑层
++ * <p>
++ * 作者：优雅
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-16
++ */
++public interface CouponTemplateRemindService extends IService<CouponTemplateRemindDO> {
++
++    /**
++     * 创建抢券预约提醒
++     *
++     * @param requestParam 请求参数
++     */
++    void createCouponRemind(CouponTemplateRemindCreateReqDTO requestParam);
++}
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/service/impl/CouponTemplateServiceRemindImpl.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/service/impl/CouponTemplateServiceRemindImpl.java
+new file mode 100644
+index 0000000..6af01c0
+--- /dev/null
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/service/impl/CouponTemplateServiceRemindImpl.java
+@@ -0,0 +1,120 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.engine.service.impl;
++
++import cn.hutool.core.bean.BeanUtil;
++import cn.hutool.core.date.DateUtil;
++import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
++import com.baomidou.mybatisplus.core.toolkit.Wrappers;
++import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
++import com.nageoffer.onecoupon.engine.common.context.UserContext;
++import com.nageoffer.onecoupon.engine.dao.entity.CouponTemplateRemindDO;
++import com.nageoffer.onecoupon.engine.dao.mapper.CouponTemplateRemindMapper;
++import com.nageoffer.onecoupon.engine.dto.req.CouponTemplateQueryReqDTO;
++import com.nageoffer.onecoupon.engine.dto.req.CouponTemplateRemindCreateReqDTO;
++import com.nageoffer.onecoupon.engine.dto.resp.CouponTemplateQueryRespDTO;
++import com.nageoffer.onecoupon.engine.mq.event.CouponRemindDelayEvent;
++import com.nageoffer.onecoupon.engine.mq.producer.CouponRemindDelayProducer;
++import com.nageoffer.onecoupon.engine.service.CouponTemplateRemindService;
++import com.nageoffer.onecoupon.engine.service.CouponTemplateService;
++import com.nageoffer.onecoupon.engine.toolkit.CouponTemplateRemindUtil;
++import com.nageoffer.onecoupon.framework.exception.ClientException;
++import lombok.RequiredArgsConstructor;
++import org.springframework.stereotype.Service;
++import org.springframework.transaction.annotation.Transactional;
++
++/**
++ * 优惠券预约提醒业务逻辑实现层
++ * <p>
++ * 作者：优雅
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-16
++ */
++@Service
++@RequiredArgsConstructor
++public class CouponTemplateServiceRemindImpl extends ServiceImpl<CouponTemplateRemindMapper, CouponTemplateRemindDO> implements CouponTemplateRemindService {
++
++    private final CouponTemplateRemindMapper couponTemplateRemindMapper;
++    private final CouponTemplateService couponTemplateService;
++    private final CouponRemindDelayProducer couponRemindDelayProducer;
++
++    @Override
++    @Transactional
++    public void createCouponRemind(CouponTemplateRemindCreateReqDTO requestParam) {
++        // 验证优惠券是否存在，避免缓存穿透问题并获取优惠券开抢时间
++        CouponTemplateQueryRespDTO couponTemplate = couponTemplateService
++                .findCouponTemplate(new CouponTemplateQueryReqDTO(requestParam.getShopNumber(), requestParam.getCouponTemplateId()));
++
++        // 查询用户是否已经预约过优惠券的提醒信息
++        LambdaQueryWrapper<CouponTemplateRemindDO> queryWrapper = Wrappers.lambdaQuery(CouponTemplateRemindDO.class)
++                .eq(CouponTemplateRemindDO::getUserId, UserContext.getUserId())
++                .eq(CouponTemplateRemindDO::getCouponTemplateId, requestParam.getCouponTemplateId());
++        CouponTemplateRemindDO couponTemplateRemindDO = couponTemplateRemindMapper.selectOne(queryWrapper);
++
++        // 如果没创建过提醒
++        if (couponTemplateRemindDO == null) {
++            couponTemplateRemindDO = BeanUtil.toBean(requestParam, CouponTemplateRemindDO.class);
++
++            // 设置优惠券开抢时间信息
++            couponTemplateRemindDO.setStartTime(couponTemplate.getValidStartTime());
++            couponTemplateRemindDO.setInformation(CouponTemplateRemindUtil.calculateBitMap(requestParam.getRemindTime(), requestParam.getType()));
++            couponTemplateRemindDO.setUserId(Long.parseLong(UserContext.getUserId()));
++
++            couponTemplateRemindMapper.insert(couponTemplateRemindDO);
++        } else {
++            Long information = couponTemplateRemindDO.getInformation();
++            Long bitMap = CouponTemplateRemindUtil.calculateBitMap(requestParam.getRemindTime(), requestParam.getType());
++            if ((information & bitMap) != 0L) {
++                throw new ClientException("已经创建过该提醒了");
++            }
++            couponTemplateRemindDO.setInformation(information ^ bitMap);
++
++            couponTemplateRemindMapper.update(couponTemplateRemindDO, queryWrapper);
++        }
++
++        // 发送预约提醒抢购优惠券延时消息
++        CouponRemindDelayEvent couponRemindDelayEvent = CouponRemindDelayEvent.builder()
++                .couponTemplateId(couponTemplate.getId())
++                .userId(UserContext.getUserId())
++                .contact(UserContext.getUserId())
++                .shopNumber(couponTemplate.getShopNumber())
++                .type(requestParam.getType())
++                .remindTime(requestParam.getRemindTime())
++                .startTime(couponTemplate.getValidStartTime())
++                .delayTime(DateUtil.offsetMinute(couponTemplate.getValidStartTime(), -requestParam.getRemindTime()).getTime())
++                .build();
++        couponRemindDelayProducer.sendMessage(couponRemindDelayEvent);
++    }
++}
+diff --git a/engine/src/main/java/com/nageoffer/onecoupon/engine/toolkit/CouponTemplateRemindUtil.java b/engine/src/main/java/com/nageoffer/onecoupon/engine/toolkit/CouponTemplateRemindUtil.java
+new file mode 100644
+index 0000000..d9497d5
+--- /dev/null
++++ b/engine/src/main/java/com/nageoffer/onecoupon/engine/toolkit/CouponTemplateRemindUtil.java
+@@ -0,0 +1,67 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.engine.toolkit;
++
++import com.nageoffer.onecoupon.framework.exception.ClientException;
++
++/**
++ * 优惠券预约提醒工具类
++ * <p>
++ * 作者：优雅
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-20
++ */
++public class CouponTemplateRemindUtil {
++
++    /**
++     * 下一个类型的位移量，每个类型占用12个bit位，共计60分钟
++     */
++    private static final int NEXT_TYPE_BITS = 12;
++
++    /**
++     * 5分钟为一个间隔
++     */
++    private static final int TIME_INTERVAL = 5;
++
++    /**
++     * 根据预约时间和预约类型计算bitmap
++     */
++    public static Long calculateBitMap(Integer remindTime, Integer type) {
++        if (remindTime > TIME_INTERVAL * NEXT_TYPE_BITS) {
++            throw new ClientException("预约提醒的时间不能早于开票前" + TIME_INTERVAL * NEXT_TYPE_BITS + "分钟");
++        }
++        return 1L << (type * NEXT_TYPE_BITS + Math.max(0, remindTime / TIME_INTERVAL - 1));
++    }
++}

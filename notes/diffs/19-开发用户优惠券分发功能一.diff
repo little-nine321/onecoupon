@@ -1,0 +1,2126 @@
+﻿diff --git a/distribution/pom.xml b/distribution/pom.xml
+index 2a96985..27dad2c 100644
+--- a/distribution/pom.xml
++++ b/distribution/pom.xml
+@@ -10,15 +10,69 @@
+     <artifactId>onecoupon-distribution</artifactId>
+ 
+     <dependencies>
++        <!-- SpringBoot Web 服务器相关依赖 -->
+         <dependency>
+             <groupId>org.springframework.boot</groupId>
+             <artifactId>spring-boot-starter-web</artifactId>
+         </dependency>
+ 
++        <!-- SpringBoot 单元测试相关依赖 -->
+         <dependency>
+             <groupId>org.springframework.boot</groupId>
+             <artifactId>spring-boot-starter-test</artifactId>
+             <scope>test</scope>
+         </dependency>
++
++        <!-- 项目工具包相关依赖 -->
++        <dependency>
++            <groupId>com.alibaba.fastjson2</groupId>
++            <artifactId>fastjson2</artifactId>
++        </dependency>
++
++        <dependency>
++            <groupId>cn.hutool</groupId>
++            <artifactId>hutool-all</artifactId>
++        </dependency>
++
++        <dependency>
++            <groupId>com.alibaba</groupId>
++            <artifactId>easyexcel</artifactId>
++        </dependency>
++
++        <!-- 数据库持久层相关依赖 -->
++        <dependency>
++            <groupId>com.mysql</groupId>
++            <artifactId>mysql-connector-j</artifactId>
++            <scope>runtime</scope>
++        </dependency>
++
++        <dependency>
++            <groupId>org.springframework.boot</groupId>
++            <artifactId>spring-boot-starter-jdbc</artifactId>
++        </dependency>
++
++        <dependency>
++            <groupId>com.baomidou</groupId>
++            <artifactId>mybatis-plus-boot-starter</artifactId>
++        </dependency>
++
++        <dependency>
++            <groupId>org.apache.shardingsphere</groupId>
++            <artifactId>shardingsphere-jdbc-core</artifactId>
++            <version>${shardingsphere.version}</version>
++        </dependency>
++
++        <!-- 牛券基础架构组件包相关依赖 -->
++        <dependency>
++            <groupId>${project.groupId}</groupId>
++            <artifactId>onecoupon-framework</artifactId>
++            <version>${project.version}</version>
++        </dependency>
++
++        <!-- 消息队列相关依赖 -->
++        <dependency>
++            <groupId>org.apache.rocketmq</groupId>
++            <artifactId>rocketmq-spring-boot-starter</artifactId>
++        </dependency>
+     </dependencies>
+ </project>
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/DistributionApplication.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/DistributionApplication.java
+index 4c779a3..c4e8ef3 100644
+--- a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/DistributionApplication.java
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/DistributionApplication.java
+@@ -34,6 +34,7 @@
+ 
+ package com.nageoffer.onecoupon.distribution;
+ 
++import org.mybatis.spring.annotation.MapperScan;
+ import org.springframework.boot.SpringApplication;
+ import org.springframework.boot.autoconfigure.SpringBootApplication;
+ 
+@@ -45,6 +46,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
+  * 开发时间：2024-07-08
+  */
+ @SpringBootApplication
++@MapperScan("com.nageoffer.onecoupon.distribution.dao.mapper")
+ public class DistributionApplication {
+ 
+     public static void main(String[] args) {
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/constant/EngineRedisConstant.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/constant/EngineRedisConstant.java
+new file mode 100644
+index 0000000..22b200b
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/constant/EngineRedisConstant.java
+@@ -0,0 +1,55 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.common.constant;
++
++/**
++ * 分布式 Redis 缓存引擎层常量类
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-14
++ */
++public final class EngineRedisConstant {
++
++    /**
++     * 优惠券模板缓存 Key
++     */
++    public static final String COUPON_TEMPLATE_KEY = "one-coupon_engine:template:%s";
++
++    /**
++     * 用户已领取优惠券列表模板 Key
++     */
++    public static final String USER_COUPON_TEMPLATE_LIST_KEY = "one-coupon_engine:user-template-list:%s";
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/enums/CouponSourceEnum.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/enums/CouponSourceEnum.java
+new file mode 100644
+index 0000000..c8db65d
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/enums/CouponSourceEnum.java
+@@ -0,0 +1,62 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.common.enums;
++
++import lombok.Getter;
++import lombok.RequiredArgsConstructor;
++
++/**
++ * 优惠券来源枚举类
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部沟通群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-15
++ */
++@RequiredArgsConstructor
++public enum CouponSourceEnum {
++
++    /**
++     * 店铺券
++     */
++    SHOP(0),
++
++    /**
++     * 平台券
++     */
++    PLATFORM(1);
++
++    @Getter
++    private final int type;
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/enums/CouponStatusEnum.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/enums/CouponStatusEnum.java
+new file mode 100644
+index 0000000..1d145cd
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/enums/CouponStatusEnum.java
+@@ -0,0 +1,62 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.common.enums;
++
++import lombok.Getter;
++import lombok.RequiredArgsConstructor;
++
++/**
++ * 优惠券使用状态枚举类
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部沟通群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-15
++ */
++@RequiredArgsConstructor
++public enum CouponStatusEnum {
++
++    /**
++     * 生效中
++     */
++    EFFECTIVE(0),
++
++    /**
++     * 已结束
++     */
++    ENDED(1);
++
++    @Getter
++    private final int type;
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/enums/CouponTaskStatusEnum.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/enums/CouponTaskStatusEnum.java
+new file mode 100644
+index 0000000..706bd43
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/enums/CouponTaskStatusEnum.java
+@@ -0,0 +1,77 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.common.enums;
++
++import lombok.Getter;
++import lombok.RequiredArgsConstructor;
++
++/**
++ * 优惠券推送任务状态枚举
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-13
++ */
++@RequiredArgsConstructor
++public enum CouponTaskStatusEnum {
++
++    /**
++     * 待执行
++     */
++    PENDING(0),
++
++    /**
++     * 执行中
++     */
++    IN_PROGRESS(1),
++
++    /**
++     * 执行失败
++     */
++    FAILED(2),
++
++    /**
++     * 执行成功
++     */
++    SUCCESS(3),
++
++    /**
++     * 取消
++     */
++    CANAL(4);
++
++    @Getter
++    private final int status;
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/enums/CouponTemplateStatusEnum.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/enums/CouponTemplateStatusEnum.java
+new file mode 100644
+index 0000000..fe26879
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/common/enums/CouponTemplateStatusEnum.java
+@@ -0,0 +1,62 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.common.enums;
++
++import lombok.Getter;
++import lombok.RequiredArgsConstructor;
++
++/**
++ * 优惠券模板状态枚举
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-14
++ */
++@RequiredArgsConstructor
++public enum CouponTemplateStatusEnum {
++
++    /**
++     * 0: 表示优惠券处于生效中的状态。
++     */
++    ACTIVE(0),
++
++    /**
++     * 1: 表示优惠券已经结束，不可再使用。
++     */
++    ENDED(1);
++
++    @Getter
++    private final int status;
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/config/DataBaseConfiguration.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/config/DataBaseConfiguration.java
+new file mode 100644
+index 0000000..aa83a27
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/config/DataBaseConfiguration.java
+@@ -0,0 +1,96 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.config;
++
++import com.baomidou.mybatisplus.annotation.DbType;
++import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
++import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
++import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
++import org.apache.ibatis.reflection.MetaObject;
++import org.springframework.context.annotation.Bean;
++import org.springframework.context.annotation.Configuration;
++
++import java.util.Date;
++
++/**
++ * 数据库持久层配置类｜配置 MyBatis-Plus 相关分页插件等
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-25
++ */
++@Configuration
++public class DataBaseConfiguration {
++
++    /**
++     * MyBatis-Plus MySQL 分页插件
++     */
++    @Bean
++    public MybatisPlusInterceptor mybatisPlusInterceptor() {
++        MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
++        interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
++        return interceptor;
++    }
++
++    /**
++     * MyBatis-Plus 源数据自动填充类
++     */
++    @Bean
++    public MyMetaObjectHandler myMetaObjectHandler() {
++        return new MyMetaObjectHandler();
++    }
++
++    /**
++     * MyBatis-Plus 源数据自动填充类
++     * <p>
++     * 作者：马丁
++     * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++     * 开发时间：2024-07-08
++     */
++    static class MyMetaObjectHandler implements MetaObjectHandler {
++
++        @Override
++        public void insertFill(MetaObject metaObject) {
++            strictInsertFill(metaObject, "createTime", Date::new, Date.class);
++            strictInsertFill(metaObject, "updateTime", Date::new, Date.class);
++            strictInsertFill(metaObject, "delFlag", () -> 0, Integer.class);
++        }
++
++        @Override
++        public void updateFill(MetaObject metaObject) {
++            strictInsertFill(metaObject, "updateTime", Date::new, Date.class);
++        }
++    }
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/entity/CouponTaskDO.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/entity/CouponTaskDO.java
+new file mode 100644
+index 0000000..20874bd
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/entity/CouponTaskDO.java
+@@ -0,0 +1,148 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.dao.entity;
++
++import com.baomidou.mybatisplus.annotation.FieldFill;
++import com.baomidou.mybatisplus.annotation.TableField;
++import com.baomidou.mybatisplus.annotation.TableName;
++import lombok.AllArgsConstructor;
++import lombok.Builder;
++import lombok.Data;
++import lombok.NoArgsConstructor;
++
++import java.util.Date;
++
++/**
++ * 优惠券推送任务数据库持久层实体
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-13
++ */
++@Data
++@NoArgsConstructor
++@AllArgsConstructor
++@Builder
++@TableName("t_coupon_task")
++public class CouponTaskDO {
++
++    /**
++     * id
++     */
++    private Long id;
++
++    /**
++     * 店铺编号
++     */
++    private Long shopNumber;
++
++    /**
++     * 批次id
++     */
++    private Long batchId;
++
++    /**
++     * 优惠券批次任务名称
++     */
++    private String taskName;
++
++    /**
++     * 文件地址
++     */
++    private String fileAddress;
++
++    /**
++     * 发放失败用户文件地址
++     */
++    private String failFileAddress;
++
++    /**
++     * 发放优惠券数量
++     */
++    private Integer sendNum;
++
++    /**
++     * 通知方式，可组合使用 0：站内信 1：弹框推送 2：邮箱 3：短信
++     */
++    private String notifyType;
++
++    /**
++     * 优惠券模板id
++     */
++    private Long couponTemplateId;
++
++    /**
++     * 发送类型 0：立即发送 1：定时发送
++     */
++    private Integer sendType;
++
++    /**
++     * 发送时间
++     */
++    private Date sendTime;
++
++    /**
++     * 状态 0：待执行 1：执行中 2：执行失败 3：执行成功 4：取消
++     */
++    private Integer status;
++
++    /**
++     * 完成时间
++     */
++    private Date completionTime;
++
++    /**
++     * 操作人
++     */
++    private Long operatorId;
++
++    /**
++     * 创建时间
++     */
++    @TableField(fill = FieldFill.INSERT)
++    private Date createTime;
++
++    /**
++     * 修改时间
++     */
++    @TableField(fill = FieldFill.INSERT_UPDATE)
++    private Date updateTime;
++
++    /**
++     * 删除标识 0：未删除 1：已删除
++     */
++    @TableField(fill = FieldFill.INSERT)
++    private Integer delFlag;
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/entity/CouponTemplateDO.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/entity/CouponTemplateDO.java
+new file mode 100644
+index 0000000..f938b4d
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/entity/CouponTemplateDO.java
+@@ -0,0 +1,143 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.dao.entity;
++
++import com.baomidou.mybatisplus.annotation.FieldFill;
++import com.baomidou.mybatisplus.annotation.TableField;
++import com.baomidou.mybatisplus.annotation.TableName;
++import lombok.AllArgsConstructor;
++import lombok.Builder;
++import lombok.Data;
++import lombok.NoArgsConstructor;
++
++import java.util.Date;
++
++/**
++ * 优惠券模板数据库持久层实体
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-16
++ */
++@Data
++@NoArgsConstructor
++@AllArgsConstructor
++@Builder
++@TableName("t_coupon_template")
++public class CouponTemplateDO {
++
++    /**
++     * id
++     */
++    private Long id;
++
++    /**
++     * 店铺编号
++     */
++    private Long shopNumber;
++
++    /**
++     * 优惠券名称
++     */
++    private String name;
++
++    /**
++     * 优惠券来源 0：店铺券 1：平台券
++     */
++    private Integer source;
++
++    /**
++     * 优惠对象 0：商品专属 1：全店通用
++     */
++    private Integer target;
++
++    /**
++     * 优惠商品编码
++     */
++    private String goods;
++
++    /**
++     * 优惠类型 0：立减券 1：满减券 2：折扣券
++     */
++    private Integer type;
++
++    /**
++     * 有效期开始时间
++     */
++    private Date validStartTime;
++
++    /**
++     * 有效期结束时间
++     */
++    private Date validEndTime;
++
++    /**
++     * 库存
++     */
++    private Integer stock;
++
++    /**
++     * 领取规则
++     */
++    private String receiveRule;
++
++    /**
++     * 消耗规则
++     */
++    private String consumeRule;
++
++    /**
++     * 优惠券状态 0：生效中 1：已结束
++     */
++    private Integer status;
++
++    /**
++     * 创建时间
++     */
++    @TableField(fill = FieldFill.INSERT)
++    private Date createTime;
++
++    /**
++     * 修改时间
++     */
++    @TableField(fill = FieldFill.INSERT_UPDATE)
++    private Date updateTime;
++
++    /**
++     * 删除标识 0：未删除 1：已删除
++     */
++    @TableField(fill = FieldFill.INSERT)
++    private Integer delFlag;
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/entity/UserCouponDO.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/entity/UserCouponDO.java
+new file mode 100644
+index 0000000..56d8f55
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/entity/UserCouponDO.java
+@@ -0,0 +1,128 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.dao.entity;
++
++import com.baomidou.mybatisplus.annotation.FieldFill;
++import com.baomidou.mybatisplus.annotation.TableField;
++import com.baomidou.mybatisplus.annotation.TableName;
++import lombok.AllArgsConstructor;
++import lombok.Builder;
++import lombok.Data;
++import lombok.NoArgsConstructor;
++
++import java.util.Date;
++
++/**
++ * 用户优惠券数据库持久层实体
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部沟通群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-14
++ */
++@Data
++@NoArgsConstructor
++@AllArgsConstructor
++@Builder
++@TableName("t_user_coupon")
++public class UserCouponDO {
++
++    /**
++     * id
++     */
++    private Long id;
++
++    /**
++     * 用户id
++     */
++    private Long userId;
++
++    /**
++     * 优惠券模板id
++     */
++    private Long couponTemplateId;
++
++    /**
++     * 领取时间
++     */
++    private Date receiveTime;
++
++    /**
++     * 领取次数
++     */
++    private Integer receiveCount;
++
++    /**
++     * 有效期开始时间
++     */
++    private Date validStartTime;
++
++    /**
++     * 有效期结束时间
++     */
++    private Date validEndTime;
++
++    /**
++     * 使用时间
++     */
++    private Date useTime;
++
++    /**
++     * 券来源 0：领券中心 1：平台发放 2：店铺领取
++     */
++    private Integer source;
++
++    /**
++     * 状态 0：未使用 1：锁定 2：已使用 3：已过期 4：已撤回
++     */
++    private Integer status;
++
++    /**
++     * 创建时间
++     */
++    @TableField(fill = FieldFill.INSERT)
++    private Date createTime;
++
++    /**
++     * 修改时间
++     */
++    @TableField(fill = FieldFill.INSERT_UPDATE)
++    private Date updateTime;
++
++    /**
++     * 删除标识 0：未删除 1：已删除
++     */
++    @TableField(fill = FieldFill.INSERT)
++    private Integer delFlag;
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/mapper/CouponTaskMapper.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/mapper/CouponTaskMapper.java
+new file mode 100644
+index 0000000..5b74098
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/mapper/CouponTaskMapper.java
+@@ -0,0 +1,48 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.dao.mapper;
++
++import com.baomidou.mybatisplus.core.mapper.BaseMapper;
++import com.nageoffer.onecoupon.distribution.dao.entity.CouponTaskDO;
++
++/**
++ * 优惠券推送任务数据库持久层
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-13
++ */
++public interface CouponTaskMapper extends BaseMapper<CouponTaskDO> {
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/mapper/CouponTemplateMapper.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/mapper/CouponTemplateMapper.java
+new file mode 100644
+index 0000000..ad09d8b
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/mapper/CouponTemplateMapper.java
+@@ -0,0 +1,57 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.dao.mapper;
++
++import com.baomidou.mybatisplus.core.mapper.BaseMapper;
++import com.nageoffer.onecoupon.distribution.dao.entity.CouponTemplateDO;
++import org.apache.ibatis.annotations.Param;
++
++/**
++ * 优惠券模板数据库持久层
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-16
++ */
++public interface CouponTemplateMapper extends BaseMapper<CouponTemplateDO> {
++
++    /**
++     * 自减优惠券模板库存
++     *
++     * @param couponTemplateId 优惠券模板 ID
++     * @return 是否发生记录变更
++     */
++    int decrementCouponTemplateStock(@Param("shopNumber") Long shopNumber, @Param("couponTemplateId") Long couponTemplateId, @Param("decrementStock") Integer decrementStock);
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/mapper/UserCouponMapper.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/mapper/UserCouponMapper.java
+new file mode 100644
+index 0000000..ee54972
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/mapper/UserCouponMapper.java
+@@ -0,0 +1,51 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.dao.mapper;
++
++import com.baomidou.mybatisplus.core.mapper.BaseMapper;
++import com.nageoffer.onecoupon.distribution.dao.entity.UserCouponDO;
++import org.apache.ibatis.annotations.Param;
++
++import java.util.List;
++
++/**
++ * 用户优惠券数据库持久层
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部沟通群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-14
++ */
++public interface UserCouponMapper extends BaseMapper<UserCouponDO> {
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/sharding/DBHashModShardingAlgorithm.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/sharding/DBHashModShardingAlgorithm.java
+new file mode 100644
+index 0000000..066e078
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/sharding/DBHashModShardingAlgorithm.java
+@@ -0,0 +1,102 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.dao.sharding;
++
++import cn.hutool.core.lang.Singleton;
++import lombok.Getter;
++import org.apache.shardingsphere.infra.util.exception.ShardingSpherePreconditions;
++import org.apache.shardingsphere.sharding.api.sharding.standard.PreciseShardingValue;
++import org.apache.shardingsphere.sharding.api.sharding.standard.RangeShardingValue;
++import org.apache.shardingsphere.sharding.api.sharding.standard.StandardShardingAlgorithm;
++import org.apache.shardingsphere.sharding.exception.algorithm.sharding.ShardingAlgorithmInitializationException;
++
++import java.util.Collection;
++import java.util.List;
++import java.util.Properties;
++
++/**
++ * 基于 HashMod 方式自定义分库算法
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-16
++ */
++public final class DBHashModShardingAlgorithm implements StandardShardingAlgorithm<Long> {
++
++    @Getter
++    private Properties props;
++
++    private int shardingCount;
++    private static final String SHARDING_COUNT_KEY = "sharding-count";
++
++    @Override
++    public String doSharding(Collection<String> availableTargetNames, PreciseShardingValue<Long> shardingValue) {
++        int mod = getShardingMod(shardingValue.getValue(), availableTargetNames.size());
++        int index = 0;
++        for (String targetName : availableTargetNames) {
++            if (index == mod) {
++                return targetName;
++            }
++            index++;
++        }
++        throw new IllegalArgumentException("No target found for value: " + shardingValue.getValue());
++    }
++
++    @Override
++    public Collection<String> doSharding(Collection<String> availableTargetNames, RangeShardingValue<Long> shardingValue) {
++        // 暂无范围分片场景，默认返回空
++        return List.of();
++    }
++
++    @Override
++    public void init(Properties props) {
++        this.props = props;
++        shardingCount = getShardingCount(props);
++        Singleton.put(this);
++    }
++
++    public int getShardingMod(long id, int availableTargetSize) {
++        return (int) hashShardingValue(id) % shardingCount / (shardingCount / availableTargetSize);
++    }
++
++    private int getShardingCount(final Properties props) {
++        ShardingSpherePreconditions.checkState(props.containsKey(SHARDING_COUNT_KEY), () -> new ShardingAlgorithmInitializationException(getType(), "Sharding count cannot be null."));
++        return Integer.parseInt(props.getProperty(SHARDING_COUNT_KEY));
++    }
++
++    private long hashShardingValue(final Comparable<?> shardingValue) {
++        return Math.abs((long) shardingValue.hashCode());
++    }
++}
+\ No newline at end of file
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/sharding/TableHashModShardingAlgorithm.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/sharding/TableHashModShardingAlgorithm.java
+new file mode 100644
+index 0000000..0ecc85c
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/dao/sharding/TableHashModShardingAlgorithm.java
+@@ -0,0 +1,77 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.dao.sharding;
++
++import org.apache.shardingsphere.sharding.api.sharding.standard.PreciseShardingValue;
++import org.apache.shardingsphere.sharding.api.sharding.standard.RangeShardingValue;
++import org.apache.shardingsphere.sharding.api.sharding.standard.StandardShardingAlgorithm;
++
++import java.util.Collection;
++import java.util.List;
++
++/**
++ * 基于 HashMod 方式自定义分表算法
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-16
++ */
++public final class TableHashModShardingAlgorithm implements StandardShardingAlgorithm<Long> {
++
++    @Override
++    public String doSharding(Collection<String> availableTargetNames, PreciseShardingValue<Long> shardingValue) {
++        long id = shardingValue.getValue();
++        int shardingCount = availableTargetNames.size();
++        int mod = (int) hashShardingValue(id) % shardingCount;
++        int index = 0;
++        for (String targetName : availableTargetNames) {
++            if (index == mod) {
++                return targetName;
++            }
++            index++;
++        }
++        throw new IllegalArgumentException("No target found for value: " + id);
++    }
++
++    @Override
++    public Collection<String> doSharding(Collection<String> availableTargetNames, RangeShardingValue<Long> shardingValue) {
++        // 暂无范围分片场景，默认返回空
++        return List.of();
++    }
++
++    private long hashShardingValue(final Comparable<?> shardingValue) {
++        return Math.abs((long) shardingValue.hashCode());
++    }
++}
+\ No newline at end of file
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/base/BaseSendExtendDTO.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/base/BaseSendExtendDTO.java
+new file mode 100644
+index 0000000..92d01cb
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/base/BaseSendExtendDTO.java
+@@ -0,0 +1,84 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.mq.base;
++
++import lombok.AllArgsConstructor;
++import lombok.Builder;
++import lombok.Data;
++import lombok.NoArgsConstructor;
++
++/**
++ * 消息发送事件基础扩充属性实体
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-13
++ */
++@Data
++@NoArgsConstructor
++@AllArgsConstructor
++@Builder
++public final class BaseSendExtendDTO {
++
++    /**
++     * 事件名称
++     */
++    private String eventName;
++
++    /**
++     * 主题
++     */
++    private String topic;
++
++    /**
++     * 标签
++     */
++    private String tag;
++
++    /**
++     * 业务标识
++     */
++    private String keys;
++
++    /**
++     * 发送消息超时时间
++     */
++    private Long sentTimeout;
++
++    /**
++     * 具体延迟时间
++     */
++    private Long delayTime;
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/base/MessageWrapper.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/base/MessageWrapper.java
+new file mode 100644
+index 0000000..bd4859d
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/base/MessageWrapper.java
+@@ -0,0 +1,84 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.mq.base;
++
++import lombok.AllArgsConstructor;
++import lombok.Builder;
++import lombok.Data;
++import lombok.NoArgsConstructor;
++import lombok.NonNull;
++import lombok.RequiredArgsConstructor;
++
++import java.io.Serializable;
++import java.util.UUID;
++
++/**
++ * 消息体包装器
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-13
++ */
++@Data
++@Builder
++@NoArgsConstructor(force = true)
++@AllArgsConstructor
++@RequiredArgsConstructor
++public final class MessageWrapper<T> implements Serializable {
++
++    private static final long serialVersionUID = 1L;
++
++    /**
++     * 消息发送 Keys
++     */
++    @NonNull
++    private String keys;
++
++    /**
++     * 消息体
++     */
++    @NonNull
++    private T message;
++
++    /**
++     * 唯一标识，用于客户端幂等验证
++     */
++    private String uuid = UUID.randomUUID().toString();
++
++    /**
++     * 消息发送时间
++     */
++    private Long timestamp = System.currentTimeMillis();
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/consumer/CouponTaskExecuteConsumer.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/consumer/CouponTaskExecuteConsumer.java
+new file mode 100644
+index 0000000..d92005c
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/consumer/CouponTaskExecuteConsumer.java
+@@ -0,0 +1,114 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.mq.consumer;
++
++import cn.hutool.core.util.ObjectUtil;
++import com.alibaba.excel.EasyExcel;
++import com.alibaba.fastjson2.JSON;
++import com.baomidou.mybatisplus.core.toolkit.Wrappers;
++import com.nageoffer.onecoupon.distribution.common.enums.CouponTaskStatusEnum;
++import com.nageoffer.onecoupon.distribution.common.enums.CouponTemplateStatusEnum;
++import com.nageoffer.onecoupon.distribution.dao.entity.CouponTemplateDO;
++import com.nageoffer.onecoupon.distribution.dao.mapper.CouponTaskMapper;
++import com.nageoffer.onecoupon.distribution.dao.mapper.CouponTemplateMapper;
++import com.nageoffer.onecoupon.distribution.dao.mapper.UserCouponMapper;
++import com.nageoffer.onecoupon.distribution.mq.base.MessageWrapper;
++import com.nageoffer.onecoupon.distribution.mq.event.CouponTaskExecuteEvent;
++import com.nageoffer.onecoupon.distribution.service.handler.excel.CouponTaskExcelObject;
++import com.nageoffer.onecoupon.distribution.service.handler.excel.ReadExcelDistributionListener;
++import lombok.RequiredArgsConstructor;
++import lombok.extern.slf4j.Slf4j;
++import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
++import org.apache.rocketmq.spring.core.RocketMQListener;
++import org.springframework.data.redis.core.StringRedisTemplate;
++import org.springframework.stereotype.Component;
++
++/**
++ * 优惠券推送定时执行-真实执行消费者
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部沟通群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-13
++ */
++@Component
++@RequiredArgsConstructor
++@RocketMQMessageListener(
++        topic = "one-coupon_distribution-service_coupon-task-execute_topic${unique-name:}",
++        consumerGroup = "one-coupon_distribution-service_coupon-task-execute_cg${unique-name:}"
++)
++@Slf4j(topic = "CouponTaskExecuteConsumer")
++public class CouponTaskExecuteConsumer implements RocketMQListener<MessageWrapper<CouponTaskExecuteEvent>> {
++
++    private final CouponTaskMapper couponTaskMapper;
++    private final CouponTemplateMapper couponTemplateMapper;
++    private final StringRedisTemplate stringRedisTemplate;
++    private final UserCouponMapper userCouponMapper;
++
++    @Override
++    public void onMessage(MessageWrapper<CouponTaskExecuteEvent> messageWrapper) {
++        // 开头打印日志，平常可 Debug 看任务参数，线上可报平安（比如消息是否消费，重新投递时获取参数等）
++        log.info("[消费者] 优惠券推送任务正式执行 - 执行消费逻辑，消息体：{}", JSON.toJSONString(messageWrapper));
++
++        // 判断优惠券模板发送状态是否为执行中，如果不是有可能是被取消状态
++        var couponTaskId = messageWrapper.getMessage().getCouponTaskId();
++        var couponTaskDO = couponTaskMapper.selectById(couponTaskId);
++        if (ObjectUtil.notEqual(couponTaskDO.getStatus(), CouponTaskStatusEnum.IN_PROGRESS.getStatus())) {
++            log.warn("[消费者] 优惠券推送任务正式执行 - 推送任务记录状态异常：{}，已终止推送", couponTaskDO.getStatus());
++            return;
++        }
++
++        // 判断优惠券状态是否正确
++        var queryWrapper = Wrappers.lambdaQuery(CouponTemplateDO.class)
++                .eq(CouponTemplateDO::getId, couponTaskDO.getCouponTemplateId())
++                .eq(CouponTemplateDO::getShopNumber, couponTaskDO.getShopNumber());
++        var couponTemplateDO = couponTemplateMapper.selectOne(queryWrapper);
++        var status = couponTemplateDO.getStatus();
++        if (ObjectUtil.notEqual(status, CouponTemplateStatusEnum.ACTIVE.getStatus())) {
++            log.error("[消费者] 优惠券推送任务正式执行 - 优惠券ID：{}，优惠券模板状态：{}", couponTaskDO.getCouponTemplateId(), status);
++            return;
++        }
++
++        // 正式开始执行优惠券推送任务
++        var readExcelDistributionListener = new ReadExcelDistributionListener(
++                couponTaskId,
++                couponTemplateDO,
++                stringRedisTemplate,
++                couponTemplateMapper,
++                userCouponMapper,
++                couponTaskMapper
++        );
++        EasyExcel.read(couponTaskDO.getFileAddress(), CouponTaskExcelObject.class, readExcelDistributionListener).sheet().doRead();
++    }
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/event/CouponTaskExecuteEvent.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/event/CouponTaskExecuteEvent.java
+new file mode 100644
+index 0000000..bfd9673
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/mq/event/CouponTaskExecuteEvent.java
+@@ -0,0 +1,59 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.mq.event;
++
++import lombok.AllArgsConstructor;
++import lombok.Builder;
++import lombok.Data;
++import lombok.NoArgsConstructor;
++
++/**
++ * 优惠券推送任务执行事件
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-13
++ */
++@Data
++@Builder
++@NoArgsConstructor
++@AllArgsConstructor
++public class CouponTaskExecuteEvent {
++
++    /**
++     * 推送任务id
++     */
++    private Long couponTaskId;
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/service/handler/excel/CouponTaskExcelObject.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/service/handler/excel/CouponTaskExcelObject.java
+new file mode 100644
+index 0000000..3561ae0
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/service/handler/excel/CouponTaskExcelObject.java
+@@ -0,0 +1,58 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.service.handler.excel;
++
++import com.alibaba.excel.annotation.ExcelProperty;
++import lombok.Data;
++
++/**
++ * 优惠券推送任务 Excel 元数据实体
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部沟通群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-14
++ */
++@Data
++public class CouponTaskExcelObject {
++
++    @ExcelProperty("用户ID")
++    private String userId;
++
++    @ExcelProperty("手机号")
++    private String phone;
++
++    @ExcelProperty("邮箱")
++    private String mail;
++}
+diff --git a/distribution/src/main/java/com/nageoffer/onecoupon/distribution/service/handler/excel/ReadExcelDistributionListener.java b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/service/handler/excel/ReadExcelDistributionListener.java
+new file mode 100644
+index 0000000..b238260
+--- /dev/null
++++ b/distribution/src/main/java/com/nageoffer/onecoupon/distribution/service/handler/excel/ReadExcelDistributionListener.java
+@@ -0,0 +1,137 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.distribution.service.handler.excel;
++
++import cn.hutool.core.date.DateTime;
++import cn.hutool.core.date.DateUtil;
++import cn.hutool.core.util.StrUtil;
++import com.alibaba.excel.context.AnalysisContext;
++import com.alibaba.excel.event.AnalysisEventListener;
++import com.alibaba.fastjson2.JSON;
++import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
++import com.nageoffer.onecoupon.distribution.common.constant.EngineRedisConstant;
++import com.nageoffer.onecoupon.distribution.common.enums.CouponSourceEnum;
++import com.nageoffer.onecoupon.distribution.common.enums.CouponStatusEnum;
++import com.nageoffer.onecoupon.distribution.common.enums.CouponTaskStatusEnum;
++import com.nageoffer.onecoupon.distribution.dao.entity.CouponTaskDO;
++import com.nageoffer.onecoupon.distribution.dao.entity.CouponTemplateDO;
++import com.nageoffer.onecoupon.distribution.dao.entity.UserCouponDO;
++import com.nageoffer.onecoupon.distribution.dao.mapper.CouponTaskMapper;
++import com.nageoffer.onecoupon.distribution.dao.mapper.CouponTemplateMapper;
++import com.nageoffer.onecoupon.distribution.dao.mapper.UserCouponMapper;
++import lombok.RequiredArgsConstructor;
++import org.apache.ibatis.executor.BatchExecutorException;
++import org.springframework.data.redis.core.StringRedisTemplate;
++
++import java.util.Date;
++
++/**
++ * 优惠券任务读取 Excel 分发监听器
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部沟通群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-14
++ */
++@RequiredArgsConstructor
++public class ReadExcelDistributionListener extends AnalysisEventListener<CouponTaskExcelObject> {
++
++    private final Long couponTaskId;
++    private final CouponTemplateDO couponTemplateDO;
++    private final StringRedisTemplate stringRedisTemplate;
++    private final CouponTemplateMapper couponTemplateMapper;
++    private final UserCouponMapper userCouponMapper;
++    private final CouponTaskMapper couponTaskMapper;
++
++    @Override
++    public void invoke(CouponTaskExcelObject data, AnalysisContext context) {
++        // 通过缓存判断优惠券模板记录库存是否充足
++        String couponTemplateKey = String.format(EngineRedisConstant.COUPON_TEMPLATE_KEY, couponTemplateDO.getId());
++        Long stock = stringRedisTemplate.opsForHash().increment(couponTemplateKey, "stock", -1);
++        if (stock < 0) {
++            // 优惠券模板缓存库存不足扣减失败
++            return;
++        }
++
++        // 扣减优惠券模板库存，如果扣减成功，这里会返回 1，代表修改记录成功；否则返回 0，代表没有修改成功
++        int decrementResult = couponTemplateMapper.decrementCouponTemplateStock(couponTemplateDO.getShopNumber(), couponTemplateDO.getId(), 1);
++        if (!SqlHelper.retBool(decrementResult)) {
++            // 优惠券模板数据库库存不足扣减失败
++            return;
++        }
++
++        // 添加用户领券记录到数据库
++        Date now = new Date();
++        DateTime validEndTime = DateUtil.offsetHour(now, JSON.parseObject(couponTemplateDO.getConsumeRule()).getInteger("validityPeriod"));
++        UserCouponDO userCouponDO = UserCouponDO.builder()
++                .couponTemplateId(couponTemplateDO.getId())
++                .userId(Long.parseLong(data.getUserId()))
++                .receiveTime(now)
++                .receiveCount(1) // 代表第一次领取该优惠券
++                .validStartTime(now)
++                .validEndTime(validEndTime)
++                .source(CouponSourceEnum.PLATFORM.getType())
++                .status(CouponStatusEnum.EFFECTIVE.getType())
++                .createTime(new Date())
++                .updateTime(new Date())
++                .delFlag(0)
++                .build();
++        try {
++            userCouponMapper.insert(userCouponDO);
++        } catch (BatchExecutorException bee) {
++            // 用户已领取优惠券，会被唯一索引校验住，直接返回即可
++            return;
++        }
++
++        // 添加优惠券到用户已领取的 Redis 优惠券列表中
++        String userCouponListCacheKey = String.format(EngineRedisConstant.USER_COUPON_TEMPLATE_LIST_KEY, data.getUserId());
++        String userCouponItemCacheKey = StrUtil.builder()
++                .append(couponTemplateDO.getId())
++                .append("_")
++                .append(userCouponDO.getId())
++                .toString();
++        stringRedisTemplate.opsForZSet().add(userCouponListCacheKey, userCouponItemCacheKey, now.getTime());
++    }
++
++    @Override
++    public void doAfterAllAnalysed(AnalysisContext analysisContext) {
++        // 确保所有用户都已经接到优惠券后，设置优惠券推送任务完成时间
++        CouponTaskDO couponTaskDO = CouponTaskDO.builder()
++                .id(couponTaskId)
++                .status(CouponTaskStatusEnum.SUCCESS.getStatus())
++                .completionTime(new Date())
++                .build();
++        couponTaskMapper.updateById(couponTaskDO);
++    }
++}
+diff --git a/distribution/src/main/resources/application.yaml b/distribution/src/main/resources/application.yaml
+index b7088fc..769dc9f 100644
+--- a/distribution/src/main/resources/application.yaml
++++ b/distribution/src/main/resources/application.yaml
+@@ -33,4 +33,24 @@ server:
+ 
+ spring:
+   application:
+-    name: oneCoupon-distribution
+\ No newline at end of file
++    name: oneCoupon-distribution
++  datasource:
++    driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
++    url: jdbc:shardingsphere:classpath:shardingsphere-config.yaml
++  data:
++    redis:
++      host: 127.0.0.1
++      port: 6379
++      password: 123456
++
++mybatis-plus:
++  configuration:
++    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
++
++rocketmq:
++  name-server: 127.0.0.1:9876
++  producer:
++    group: oneCoupon_distribution${unique-name:}-service_common-message-execute_pg
++    send-message-timeout: 2000
++    retry-times-when-send-failed: 1
++    retry-times-when-send-async-failed: 1
+diff --git a/distribution/src/main/resources/mapper/CourseTemplateMapper.xml b/distribution/src/main/resources/mapper/CourseTemplateMapper.xml
+new file mode 100644
+index 0000000..a0c9740
+--- /dev/null
++++ b/distribution/src/main/resources/mapper/CourseTemplateMapper.xml
+@@ -0,0 +1,50 @@
++<?xml version="1.0" encoding="UTF-8" ?>
++
++<!--
++ ~ 牛券（oneCoupon）优惠券平台项目
++ ~
++ ~ 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ ~
++ ~ 保留所有权利。
++ ~
++ ~ 1. 定义和解释
++ ~    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ ~    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ ~
++ ~ 2. 使用许可
++ ~    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ ~    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ ~    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ ~
++ ~ 3. 免责声明
++ ~    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ ~    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ ~
++ ~ 4. 侵权通知与处理
++ ~    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ ~    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ ~    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ ~
++ ~ 5. 其他条款
++ ~    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ ~    b. 如果您不同意这些条款，请勿使用本软件。
++ ~
++ ~ 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ ~
++ ~ 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++-->
++
++<!DOCTYPE mapper
++        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
++        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
++<mapper namespace="com.nageoffer.onecoupon.distribution.dao.mapper.CouponTemplateMapper">
++
++    <!-- 通过 MySQL 悲观行记录锁确保库存不会被多扣，并采用上层业务自旋重试直至成功将优惠券库存扣减至零 -->
++    <update id="decrementCouponTemplateStock">
++        UPDATE t_coupon_template
++        SET stock = stock - #{decrementStock}
++        WHERE shop_number = #{shopNumber}
++          AND id = #{couponTemplateId}
++          AND stock >= #{decrementStock}
++    </update>
++</mapper>
+\ No newline at end of file
+diff --git a/distribution/src/main/resources/shardingsphere-config.yaml b/distribution/src/main/resources/shardingsphere-config.yaml
+new file mode 100644
+index 0000000..2f953d7
+--- /dev/null
++++ b/distribution/src/main/resources/shardingsphere-config.yaml
+@@ -0,0 +1,99 @@
++# 牛券（oneCoupon）优惠券平台项目
++# 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++# 保留所有权利。
++#
++# 1. 定义和解释
++#    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++#    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++#
++# 2. 使用许可
++#    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++#    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++#    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++#
++# 3. 免责声明
++#    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++#    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++#
++# 4. 侵权通知与处理
++#    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++#    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++#    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++#
++# 5. 其他条款
++#    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++#    b. 如果您不同意这些条款，请勿使用本软件。
++#
++# 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++#
++# 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++
++# 数据源集合
++dataSources:
++  # 自定义数据源名称，可以是 ds_0 也可以叫 datasource_0 都可以
++  ds_0:
++    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
++    driverClassName: com.mysql.cj.jdbc.Driver
++    jdbcUrl: jdbc:mysql://127.0.0.1:3306/one_coupon_rebuild_0?useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai
++    username: root
++    password: root
++  ds_1:
++    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
++    driverClassName: com.mysql.cj.jdbc.Driver
++    jdbcUrl: jdbc:mysql://127.0.0.1:3306/one_coupon_rebuild_1?useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai
++    username: root
++    password: root
++
++rules:
++  - !SHARDING
++    tables: # 需要分片的数据库表集合
++      t_coupon_template: # 优惠券模板表
++        # 真实存在数据库中的物理表
++        actualDataNodes: ds_${0..1}.t_coupon_template_${0..15}
++        databaseStrategy: # 分库策略
++          standard: # 单分片键分库
++            shardingColumn: shop_number # 分片键
++            shardingAlgorithmName: coupon_template_database_mod # 库分片算法名称，对应 rules[0].shardingAlgorithms
++        tableStrategy: # 分表策略
++          standard: # 单分片键分表
++            shardingColumn: shop_number # 分片键
++            shardingAlgorithmName: coupon_template_table_mod # 表分片算法名称，对应 rules[0].shardingAlgorithms
++      t_user_coupon:
++        actualDataNodes: ds_${0..1}.t_user_coupon_${0..31}
++        databaseStrategy:
++          standard:
++            shardingColumn: user_id
++            shardingAlgorithmName: user_coupon_database_mod
++        tableStrategy:
++          standard:
++            shardingColumn: user_id
++            shardingAlgorithmName: user_coupon_table_mod
++    shardingAlgorithms: # 分片算法定义集合
++      coupon_template_database_mod: # 优惠券分库算法定义
++        type: CLASS_BASED # 根据自定义库分片算法类进行分片
++        props: # 分片相关属性
++          # 自定义库分片算法Class
++          algorithmClassName: com.nageoffer.onecoupon.distribution.dao.sharding.DBHashModShardingAlgorithm
++          sharding-count: 16 # 分片总数量
++          strategy: standard # 分片类型，单字段分片
++      coupon_template_table_mod: # 优惠券分表算法定义
++        type: CLASS_BASED # 根据自定义库分片算法类进行分片
++        props: # 分片相关属性
++          # 自定义表分片算法Class
++          algorithmClassName: com.nageoffer.onecoupon.distribution.dao.sharding.TableHashModShardingAlgorithm
++          strategy: standard # 分片类型，单字段分片
++      user_coupon_database_mod:
++        type: CLASS_BASED
++        props:
++          algorithmClassName: com.nageoffer.onecoupon.distribution.dao.sharding.DBHashModShardingAlgorithm
++          sharding-count: 32
++          strategy: standard
++      user_coupon_table_mod:
++        type: CLASS_BASED
++        props:
++          algorithmClassName: com.nageoffer.onecoupon.distribution.dao.sharding.TableHashModShardingAlgorithm
++          strategy: standard
++
++props:
++  # 配置 ShardingSphere 默认打印 SQL 执行语句
++  sql-show: true
+diff --git a/merchant-admin/src/test/java/com/nageoffer/onecoupon/merchant/admin/task/ExcelGenerateTests.java b/merchant-admin/src/test/java/com/nageoffer/onecoupon/merchant/admin/task/ExcelGenerateTests.java
+index 8228501..65716f6 100644
+--- a/merchant-admin/src/test/java/com/nageoffer/onecoupon/merchant/admin/task/ExcelGenerateTests.java
++++ b/merchant-admin/src/test/java/com/nageoffer/onecoupon/merchant/admin/task/ExcelGenerateTests.java
+@@ -63,7 +63,7 @@ public final class ExcelGenerateTests {
+     /**
+      * 写入优惠券推送示例 Excel 的数据，自行控制即可
+      */
+-    private final int writeNum = 1000000;
++    private final int writeNum = 5001;
+     private final Faker faker = new Faker(Locale.CHINA);
+     private final String excelPath = Paths.get("").toAbsolutePath().getParent() + "/tmp";
+ 

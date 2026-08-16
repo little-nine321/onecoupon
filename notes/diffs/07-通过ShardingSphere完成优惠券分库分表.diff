@@ -1,0 +1,505 @@
+﻿diff --git a/merchant-admin/pom.xml b/merchant-admin/pom.xml
+index e4fde99..bb86b1b 100644
+--- a/merchant-admin/pom.xml
++++ b/merchant-admin/pom.xml
+@@ -63,6 +63,12 @@
+             <artifactId>mybatis-plus-boot-starter</artifactId>
+         </dependency>
+ 
++        <dependency>
++            <groupId>org.apache.shardingsphere</groupId>
++            <artifactId>shardingsphere-jdbc-core</artifactId>
++            <version>${shardingsphere.version}</version>
++        </dependency>
++
+         <!-- 接口文档相关依赖 -->
+         <dependency>
+             <groupId>com.github.xiaoymin</groupId>
+diff --git a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dao/sharding/DBHashModShardingAlgorithm.java b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dao/sharding/DBHashModShardingAlgorithm.java
+new file mode 100644
+index 0000000..c6846ce
+--- /dev/null
++++ b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dao/sharding/DBHashModShardingAlgorithm.java
+@@ -0,0 +1,98 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.merchant.admin.dao.sharding;
++
++import lombok.Getter;
++import org.apache.shardingsphere.infra.util.exception.ShardingSpherePreconditions;
++import org.apache.shardingsphere.sharding.api.sharding.standard.PreciseShardingValue;
++import org.apache.shardingsphere.sharding.api.sharding.standard.RangeShardingValue;
++import org.apache.shardingsphere.sharding.api.sharding.standard.StandardShardingAlgorithm;
++import org.apache.shardingsphere.sharding.exception.algorithm.sharding.ShardingAlgorithmInitializationException;
++
++import java.util.Collection;
++import java.util.List;
++import java.util.Properties;
++
++/**
++ * 基于 HashMod 方式自定义分库算法
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-10
++ */
++public final class DBHashModShardingAlgorithm implements StandardShardingAlgorithm<Long> {
++
++    @Getter
++    private Properties props;
++
++    private int shardingCount;
++    private static final String SHARDING_COUNT_KEY = "sharding-count";
++
++    @Override
++    public String doSharding(Collection<String> availableTargetNames, PreciseShardingValue<Long> shardingValue) {
++        long id = shardingValue.getValue();
++        int dbSize = availableTargetNames.size();
++        int mod = (int) hashShardingValue(id) % shardingCount / (shardingCount / dbSize);
++        int index = 0;
++        for (String targetName : availableTargetNames) {
++            if (index == mod) {
++                return targetName;
++            }
++            index++;
++        }
++        throw new IllegalArgumentException("No target found for value: " + id);
++    }
++
++    @Override
++    public Collection<String> doSharding(Collection<String> availableTargetNames, RangeShardingValue<Long> shardingValue) {
++        // 暂无范围分片场景，默认返回空
++        return List.of();
++    }
++
++    @Override
++    public void init(Properties props) {
++        this.props = props;
++        shardingCount = getShardingCount(props);
++    }
++
++    private int getShardingCount(final Properties props) {
++        ShardingSpherePreconditions.checkState(props.containsKey(SHARDING_COUNT_KEY), () -> new ShardingAlgorithmInitializationException(getType(), "Sharding count cannot be null."));
++        return Integer.parseInt(props.getProperty(SHARDING_COUNT_KEY));
++    }
++
++    private long hashShardingValue(final Comparable<?> shardingValue) {
++        return Math.abs((long) shardingValue.hashCode());
++    }
++}
+\ No newline at end of file
+diff --git a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dao/sharding/TableHashModShardingAlgorithm.java b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dao/sharding/TableHashModShardingAlgorithm.java
+new file mode 100644
+index 0000000..6fba9cc
+--- /dev/null
++++ b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dao/sharding/TableHashModShardingAlgorithm.java
+@@ -0,0 +1,77 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.merchant.admin.dao.sharding;
++
++import org.apache.shardingsphere.sharding.api.sharding.standard.PreciseShardingValue;
++import org.apache.shardingsphere.sharding.api.sharding.standard.RangeShardingValue;
++import org.apache.shardingsphere.sharding.api.sharding.standard.StandardShardingAlgorithm;
++
++import java.util.Collection;
++import java.util.List;
++
++/**
++ * 基于 HashMod 方式自定义分表算法
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-10
++ */
++public final class TableHashModShardingAlgorithm implements StandardShardingAlgorithm<Long> {
++
++    @Override
++    public String doSharding(Collection<String> availableTargetNames, PreciseShardingValue<Long> shardingValue) {
++        long id = shardingValue.getValue();
++        int shardingCount = availableTargetNames.size();
++        int mod = (int) hashShardingValue(id) % shardingCount;
++        int index = 0;
++        for (String targetName : availableTargetNames) {
++            if (index == mod) {
++                return targetName;
++            }
++            index++;
++        }
++        throw new IllegalArgumentException("No target found for value: " + id);
++    }
++
++    @Override
++    public Collection<String> doSharding(Collection<String> availableTargetNames, RangeShardingValue<Long> shardingValue) {
++        // 暂无范围分片场景，默认返回空
++        return List.of();
++    }
++
++    private long hashShardingValue(final Comparable<?> shardingValue) {
++        return Math.abs((long) shardingValue.hashCode());
++    }
++}
+\ No newline at end of file
+diff --git a/merchant-admin/src/main/resources/application.yaml b/merchant-admin/src/main/resources/application.yaml
+index 359429e..206d147 100644
+--- a/merchant-admin/src/main/resources/application.yaml
++++ b/merchant-admin/src/main/resources/application.yaml
+@@ -35,9 +35,8 @@ spring:
+   application:
+     name: oneCoupon-merchant-admin
+   datasource:
+-    url: jdbc:mysql://127.0.0.1:3306/one_coupon_rebuild?useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+-    username: root
+-    password: root
++    driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
++    url: jdbc:shardingsphere:classpath:shardingsphere-config.yaml
+   data:
+     redis:
+       host: 127.0.0.1
+diff --git a/merchant-admin/src/main/resources/shardingsphere-config.yaml b/merchant-admin/src/main/resources/shardingsphere-config.yaml
+new file mode 100644
+index 0000000..dba5155
+--- /dev/null
++++ b/merchant-admin/src/main/resources/shardingsphere-config.yaml
+@@ -0,0 +1,78 @@
++# 牛券（oneCoupon）优惠券平台项目
++# 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++# 保留所有权利。
++#
++# 1. 定义和解释
++#    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++#    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++#
++# 2. 使用许可
++#    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++#    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++#    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++#
++# 3. 免责声明
++#    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++#    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++#
++# 4. 侵权通知与处理
++#    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++#    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++#    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++#
++# 5. 其他条款
++#    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++#    b. 如果您不同意这些条款，请勿使用本软件。
++#
++# 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++#
++# 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++
++# 数据源集合
++dataSources:
++  # 自定义数据源名称，可以是 ds_0 也可以叫 datasource_0 都可以
++  ds_0:
++    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
++    driverClassName: com.mysql.cj.jdbc.Driver
++    jdbcUrl: jdbc:mysql://127.0.0.1:3306/one_coupon_rebuild_0?useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai
++    username: root
++    password: root
++  ds_1:
++    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
++    driverClassName: com.mysql.cj.jdbc.Driver
++    jdbcUrl: jdbc:mysql://127.0.0.1:3306/one_coupon_rebuild_1?useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai
++    username: root
++    password: root
++
++rules:
++  - !SHARDING
++    tables: # 需要分片的数据库表集合
++      t_coupon_template: # 优惠券模板表
++        # 真实存在数据库中的物理表
++        actualDataNodes: ds_${0..1}.t_coupon_template_${0..15}
++        databaseStrategy: # 分库策略
++          standard: # 单分片键分库
++            shardingColumn: shop_number # 分片键
++            shardingAlgorithmName: coupon_template_database_mod # 库分片算法名称，对应 rules[0].shardingAlgorithms
++        tableStrategy: # 分表策略
++          standard: # 单分片键分表
++            shardingColumn: shop_number # 分片键
++            shardingAlgorithmName: coupon_template_table_mod # 表分片算法名称，对应 rules[0].shardingAlgorithms
++    shardingAlgorithms: # 分片算法定义集合
++      coupon_template_database_mod: # 优惠券分库算法定义
++        type: CLASS_BASED # 根据自定义库分片算法类进行分片
++        props: # 分片相关属性
++          # 自定义库分片算法Class
++          algorithmClassName: com.nageoffer.onecoupon.merchant.admin.dao.sharding.DBHashModShardingAlgorithm
++          sharding-count: 16 # 分片总数量
++          strategy: standard # 分片类型，单字段分片
++      coupon_template_table_mod: # 优惠券分表算法定义
++        type: CLASS_BASED # 根据自定义库分片算法类进行分片
++        props: # 分片相关属性
++          # 自定义表分片算法Class
++          algorithmClassName: com.nageoffer.onecoupon.merchant.admin.dao.sharding.TableHashModShardingAlgorithm
++          strategy: standard # 分片类型，单字段分片
++
++props:
++  # 配置 ShardingSphere 默认打印 SQL 执行语句
++  sql-show: true
+diff --git a/merchant-admin/src/test/java/com/nageoffer/onecoupon/merchant/admin/template/CouponTemplateTest.java b/merchant-admin/src/test/java/com/nageoffer/onecoupon/merchant/admin/template/CouponTemplateTest.java
+new file mode 100644
+index 0000000..869c255
+--- /dev/null
++++ b/merchant-admin/src/test/java/com/nageoffer/onecoupon/merchant/admin/template/CouponTemplateTest.java
+@@ -0,0 +1,88 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.merchant.admin.template;
++
++import cn.hutool.core.lang.Assert;
++import com.alibaba.fastjson2.JSONObject;
++import com.nageoffer.onecoupon.merchant.admin.common.enums.CouponTemplateStatusEnum;
++import com.nageoffer.onecoupon.merchant.admin.dao.entity.CouponTemplateDO;
++import com.nageoffer.onecoupon.merchant.admin.service.CouponTemplateService;
++import org.junit.jupiter.api.Test;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.boot.test.context.SpringBootTest;
++
++import java.math.BigDecimal;
++import java.util.Date;
++
++@SpringBootTest
++public class CouponTemplateTest {
++
++    @Autowired
++    private CouponTemplateService couponTemplateService;
++
++    public CouponTemplateDO buildCouponTemplateDO() {
++        JSONObject receiveRule = new JSONObject();
++        receiveRule.put("limitPerPerson", 1); // 每人限领
++        receiveRule.put("usageInstructions", "使用说明"); // 使用说明
++        JSONObject consumeRule = new JSONObject();
++        consumeRule.put("termsOfUse", new BigDecimal("10")); // 使用条件 满 x 元可用
++        consumeRule.put("maximumDiscountAmount", new BigDecimal("3")); // 最大优惠金额
++        consumeRule.put("explanationOfUnmetC 3onditions", "不满足使用条件说明"); // 不满足使用条件说明
++        consumeRule.put("validityPeriod", 48); // 自领取优惠券后有效时间，单位小时
++        CouponTemplateDO couponTemplateDO = CouponTemplateDO.builder()
++                .shopNumber(1810714735922956666L) // 店铺编号
++                .name("商品立减券") // 优惠券名称
++                .source(0) // 优惠券来源 0：店铺券 1：平台券
++                .target(1) // 优惠对象 0：商品专属 1：全店通用
++                .type(0) // 优惠类型 0：立减券 1：满减券 2：折扣券
++                .validStartTime(new Date()) // 有效期开始时间
++                .validEndTime(new Date()) // 有效期结束时间
++                .stock(10) // 库存
++                .receiveRule(receiveRule.toString()) // 领取规则
++                .consumeRule(consumeRule.toString()) // 消耗规则
++                .status(CouponTemplateStatusEnum.ACTIVE.getStatus()) // 优惠券状态 0：生效中 1：已结束
++                .build();
++        return couponTemplateDO;
++    }
++
++    /**
++     * 测试新增优惠券模板方法
++     */
++    @Test
++    public void testInsertCouponTemplate() {
++        boolean saved = couponTemplateService.save(buildCouponTemplateDO());
++        Assert.isTrue(saved);
++    }
++}
+diff --git a/merchant-admin/src/test/java/com/nageoffer/onecoupon/merchant/admin/template/MockCouponTemplateDataTests.java b/merchant-admin/src/test/java/com/nageoffer/onecoupon/merchant/admin/template/MockCouponTemplateDataTests.java
+new file mode 100644
+index 0000000..636ce56
+--- /dev/null
++++ b/merchant-admin/src/test/java/com/nageoffer/onecoupon/merchant/admin/template/MockCouponTemplateDataTests.java
+@@ -0,0 +1,99 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.merchant.admin.template;
++
++import cn.hutool.core.lang.Snowflake;
++import cn.hutool.core.util.RandomUtil;
++import com.nageoffer.onecoupon.merchant.admin.dao.entity.CouponTemplateDO;
++import com.nageoffer.onecoupon.merchant.admin.dao.mapper.CouponTemplateMapper;
++import jodd.util.ThreadUtil;
++import org.junit.jupiter.api.Test;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.boot.test.context.SpringBootTest;
++
++import java.util.ArrayList;
++import java.util.List;
++import java.util.concurrent.ExecutorService;
++import java.util.concurrent.SynchronousQueue;
++import java.util.concurrent.ThreadPoolExecutor;
++import java.util.concurrent.TimeUnit;
++import java.util.concurrent.atomic.AtomicInteger;
++
++/**
++ * Mock 优惠券模板数据，方便分库分表均衡测试
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-10
++ */
++@SpringBootTest
++public class MockCouponTemplateDataTests {
++
++    @Autowired
++    private CouponTemplateMapper couponTemplateMapper;
++
++    private final CouponTemplateTest couponTemplateTest = new CouponTemplateTest();
++    private final List<Snowflake> snowflakes = new ArrayList<>();
++    private final ExecutorService executorService = new ThreadPoolExecutor(
++            10,
++            10,
++            9999,
++            TimeUnit.SECONDS,
++            new SynchronousQueue<>(),
++            new ThreadPoolExecutor.CallerRunsPolicy()
++    );
++    private final int maxNum = 50000;
++
++    public void beforeDataBuild() {
++        for (int i = 0; i < 20; i++) {
++            snowflakes.add(new Snowflake(i));
++        }
++    }
++
++    @Test
++    public void mockCouponTemplateTest() {
++        beforeDataBuild();
++        AtomicInteger count = new AtomicInteger(0);
++        while (count.get() < maxNum) {
++            executorService.execute(() -> {
++                ThreadUtil.sleep(RandomUtil.randomInt(10));
++                CouponTemplateDO couponTemplateDO = couponTemplateTest.buildCouponTemplateDO();
++                couponTemplateDO.setShopNumber(snowflakes.get(RandomUtil.randomInt(20)).nextId());
++                couponTemplateMapper.insert(couponTemplateDO);
++                count.incrementAndGet();
++            });
++        }
++    }
++}

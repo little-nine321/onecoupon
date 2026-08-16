@@ -1,0 +1,678 @@
+﻿diff --git a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/controller/CouponTemplateController.java b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/controller/CouponTemplateController.java
+index 8a3e362..78f0274 100644
+--- a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/controller/CouponTemplateController.java
++++ b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/controller/CouponTemplateController.java
+@@ -34,14 +34,20 @@
+ 
+ package com.nageoffer.onecoupon.merchant.admin.controller;
+ 
++import com.baomidou.mybatisplus.core.metadata.IPage;
+ import com.nageoffer.onecoupon.framework.idempotent.NoDuplicateSubmit;
+ import com.nageoffer.onecoupon.framework.result.Result;
+ import com.nageoffer.onecoupon.framework.web.Results;
++import com.nageoffer.onecoupon.merchant.admin.dto.req.CouponTemplateNumberReqDTO;
++import com.nageoffer.onecoupon.merchant.admin.dto.req.CouponTemplatePageQueryReqDTO;
+ import com.nageoffer.onecoupon.merchant.admin.dto.req.CouponTemplateSaveReqDTO;
++import com.nageoffer.onecoupon.merchant.admin.dto.resp.CouponTemplatePageQueryRespDTO;
++import com.nageoffer.onecoupon.merchant.admin.dto.resp.CouponTemplateQueryRespDTO;
+ import com.nageoffer.onecoupon.merchant.admin.service.CouponTemplateService;
+ import io.swagger.v3.oas.annotations.Operation;
+ import io.swagger.v3.oas.annotations.tags.Tag;
+ import lombok.RequiredArgsConstructor;
++import org.springframework.web.bind.annotation.GetMapping;
+ import org.springframework.web.bind.annotation.PostMapping;
+ import org.springframework.web.bind.annotation.RequestBody;
+ import org.springframework.web.bind.annotation.RestController;
+@@ -67,4 +73,31 @@ public class CouponTemplateController {
+         couponTemplateService.createCouponTemplate(requestParam);
+         return Results.success();
+     }
++
++    @Operation(summary = "分页查询优惠券模板")
++    @GetMapping("/api/merchant-admin/coupon-template/page")
++    public Result<IPage<CouponTemplatePageQueryRespDTO>> pageQueryCouponTemplate(CouponTemplatePageQueryReqDTO requestParam) {
++        return Results.success(couponTemplateService.pageQueryCouponTemplate(requestParam));
++    }
++
++    @Operation(summary = "查询优惠券模板详情")
++    @GetMapping("/api/merchant-admin/coupon-template/find")
++    public Result<CouponTemplateQueryRespDTO> findCouponTemplate(String couponTemplateId) {
++        return Results.success(couponTemplateService.findCouponTemplateById(couponTemplateId));
++    }
++
++    @Operation(summary = "增加优惠券模板发行量")
++    @NoDuplicateSubmit(message = "请勿短时间内重复增加优惠券发行量")
++    @PostMapping("/api/merchant-admin/coupon-template/increase-number")
++    public Result<Void> increaseNumberCouponTemplate(@RequestBody CouponTemplateNumberReqDTO requestParam) {
++        couponTemplateService.increaseNumberCouponTemplate(requestParam);
++        return Results.success();
++    }
++
++    @Operation(summary = "结束优惠券模板")
++    @PostMapping("/api/merchant-admin/coupon-template/terminate")
++    public Result<Void> terminateCouponTemplate(String couponTemplateId) {
++        couponTemplateService.terminateCouponTemplate(couponTemplateId);
++        return Results.success();
++    }
+ }
+diff --git a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dao/mapper/CouponTemplateMapper.java b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dao/mapper/CouponTemplateMapper.java
+index b95b435..eb5808b 100644
+--- a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dao/mapper/CouponTemplateMapper.java
++++ b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dao/mapper/CouponTemplateMapper.java
+@@ -46,4 +46,13 @@ import org.apache.ibatis.annotations.Param;
+  * 开发时间：2024-07-08
+  */
+ public interface CouponTemplateMapper extends BaseMapper<CouponTemplateDO> {
++
++    /**
++     * 增加优惠券模板发行量
++     *
++     * @param shopNumber       店铺编号
++     * @param couponTemplateId 优惠券模板 ID
++     * @param number           增加发行数量
++     */
++    int increaseNumberCouponTemplate(@Param("shopNumber") Long shopNumber, @Param("couponTemplateId") String couponTemplateId, @Param("number") Integer number);
+ }
+diff --git a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dto/req/CouponTemplateNumberReqDTO.java b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dto/req/CouponTemplateNumberReqDTO.java
+new file mode 100644
+index 0000000..e1674d6
+--- /dev/null
++++ b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dto/req/CouponTemplateNumberReqDTO.java
+@@ -0,0 +1,66 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.merchant.admin.dto.req;
++
++import io.swagger.v3.oas.annotations.media.Schema;
++import lombok.Data;
++
++/**
++ * 优惠券模板增加发行量请求参数实体
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-29
++ */
++@Data
++@Schema(description = "优惠券模板增加发行量请求参数")
++public class CouponTemplateNumberReqDTO {
++
++    /**
++     * 优惠券模板id
++     */
++    @Schema(description = "优惠券模板id",
++            example = "1810966706881941507",
++            required = true)
++    private String couponTemplateId;
++
++    /**
++     * 增加发行数量
++     */
++    @Schema(description = "增加发行数量",
++            example = "100",
++            required = true)
++    private Integer number;
++}
+diff --git a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dto/req/CouponTemplatePageQueryReqDTO.java b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dto/req/CouponTemplatePageQueryReqDTO.java
+new file mode 100644
+index 0000000..db54ef6
+--- /dev/null
++++ b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dto/req/CouponTemplatePageQueryReqDTO.java
+@@ -0,0 +1,75 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.merchant.admin.dto.req;
++
++import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
++import io.swagger.v3.oas.annotations.media.Schema;
++import lombok.Data;
++
++/**
++ * 优惠券模板分页查询接口请求参数实体
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-10
++ */
++@Data
++@Schema(description = "优惠券模板分页查询参数")
++public class CouponTemplatePageQueryReqDTO extends Page {
++
++    /**
++     * 优惠券名称
++     */
++    @Schema(description = "优惠券名称")
++    private String name;
++
++    /**
++     * 优惠对象 0：商品专属 1：全店通用
++     */
++    @Schema(description = "优惠对象 0：商品专属 1：全店通用")
++    private Integer target;
++
++    /**
++     * 优惠商品编码
++     */
++    @Schema(description = "优惠商品编码")
++    private String goods;
++
++    /**
++     * 优惠类型 0：立减券 1：满减券 2：折扣券
++     */
++    @Schema(description = "优惠类型 0：立减券 1：满减券 2：折扣券")
++    private Integer type;
++}
+diff --git a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dto/resp/CouponTemplatePageQueryRespDTO.java b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dto/resp/CouponTemplatePageQueryRespDTO.java
+new file mode 100644
+index 0000000..620002c
+--- /dev/null
++++ b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/dto/resp/CouponTemplatePageQueryRespDTO.java
+@@ -0,0 +1,115 @@
++/*
++ * 牛券（oneCoupon）优惠券平台项目
++ *
++ * 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ *
++ * 保留所有权利。
++ *
++ * 1. 定义和解释
++ *    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ *    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ *
++ * 2. 使用许可
++ *    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ *    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ *    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ *
++ * 3. 免责声明
++ *    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ *    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ *
++ * 4. 侵权通知与处理
++ *    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ *    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ *    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ *
++ * 5. 其他条款
++ *    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ *    b. 如果您不同意这些条款，请勿使用本软件。
++ *
++ * 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ *
++ * 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++ */
++
++package com.nageoffer.onecoupon.merchant.admin.dto.resp;
++
++import com.fasterxml.jackson.annotation.JsonFormat;
++import io.swagger.v3.oas.annotations.media.Schema;
++import lombok.Data;
++
++import java.util.Date;
++
++/**
++ * 优惠券模板分页查询接口返回参数实体
++ * <p>
++ * 作者：马丁
++ * 加项目群：早加入就是优势！500人内部项目群，分享的知识总有你需要的 <a href="https://t.zsxq.com/cw7b9" />
++ * 开发时间：2024-07-10
++ */
++@Data
++@Schema(description = "优惠券模板分页查询返回实体")
++public class CouponTemplatePageQueryRespDTO {
++
++    /**
++     * 优惠券名称
++     */
++    @Schema(description = "优惠券名称")
++    private String name;
++
++    /**
++     * 优惠券来源 0：店铺券 1：平台券
++     */
++    @Schema(description = "优惠券来源 0：店铺券 1：平台券")
++    private Integer source;
++
++    /**
++     * 优惠对象 0：商品专属 1：全店通用
++     */
++    @Schema(description = "优惠对象 0：商品专属 1：全店通用")
++    private Integer target;
++
++    /**
++     * 优惠商品编码
++     */
++    @Schema(description = "优惠商品编码")
++    private String goods;
++
++    /**
++     * 优惠类型 0：立减券 1：满减券 2：折扣券
++     */
++    @Schema(description = "优惠类型 0：立减券 1：满减券 2：折扣券")
++    private Integer type;
++
++    /**
++     * 有效期开始时间
++     */
++    @Schema(description = "有效期开始时间")
++    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
++    private Date validStartTime;
++
++    /**
++     * 有效期结束时间
++     */
++    @Schema(description = "有效期结束时间")
++    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
++    private Date validEndTime;
++
++    /**
++     * 库存
++     */
++    @Schema(description = "库存")
++    private Integer stock;
++
++    /**
++     * 领取规则
++     */
++    @Schema(description = "领取规则")
++    private String receiveRule;
++
++    /**
++     * 消耗规则
++     */
++    @Schema(description = "消耗规则")
++    private String consumeRule;
++}
+diff --git a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/service/CouponTemplateService.java b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/service/CouponTemplateService.java
+index 8812549..b4b14a1 100644
+--- a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/service/CouponTemplateService.java
++++ b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/service/CouponTemplateService.java
+@@ -34,9 +34,14 @@
+ 
+ package com.nageoffer.onecoupon.merchant.admin.service;
+ 
++import com.baomidou.mybatisplus.core.metadata.IPage;
+ import com.baomidou.mybatisplus.extension.service.IService;
+ import com.nageoffer.onecoupon.merchant.admin.dao.entity.CouponTemplateDO;
++import com.nageoffer.onecoupon.merchant.admin.dto.req.CouponTemplateNumberReqDTO;
++import com.nageoffer.onecoupon.merchant.admin.dto.req.CouponTemplatePageQueryReqDTO;
+ import com.nageoffer.onecoupon.merchant.admin.dto.req.CouponTemplateSaveReqDTO;
++import com.nageoffer.onecoupon.merchant.admin.dto.resp.CouponTemplatePageQueryRespDTO;
++import com.nageoffer.onecoupon.merchant.admin.dto.resp.CouponTemplateQueryRespDTO;
+ 
+ /**
+  * 优惠券模板业务逻辑层
+@@ -53,4 +58,35 @@ public interface CouponTemplateService extends IService<CouponTemplateDO> {
+      * @param requestParam 请求参数
+      */
+     void createCouponTemplate(CouponTemplateSaveReqDTO requestParam);
++
++    /**
++     * 分页查询商家优惠券模板
++     *
++     * @param requestParam 请求参数
++     * @return 商家优惠券模板分页数据
++     */
++    IPage<CouponTemplatePageQueryRespDTO> pageQueryCouponTemplate(CouponTemplatePageQueryReqDTO requestParam);
++
++    /**
++     * 查询优惠券模板详情
++     * 后管接口并不存在并发，直接查询数据库即可
++     *
++     * @param couponTemplateId 优惠券模板 ID
++     * @return 优惠券模板详情
++     */
++    CouponTemplateQueryRespDTO findCouponTemplateById(String couponTemplateId);
++
++    /**
++     * 结束优惠券模板
++     *
++     * @param couponTemplateId 优惠券模板 ID
++     */
++    void terminateCouponTemplate(String couponTemplateId);
++
++    /**
++     * 增加优惠券模板发行量
++     *
++     * @param requestParam 请求参数
++     */
++    void increaseNumberCouponTemplate(CouponTemplateNumberReqDTO requestParam);
+ }
+diff --git a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/service/impl/CouponTemplateServiceImpl.java b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/service/impl/CouponTemplateServiceImpl.java
+index 32d7152..b0af92a 100644
+--- a/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/service/impl/CouponTemplateServiceImpl.java
++++ b/merchant-admin/src/main/java/com/nageoffer/onecoupon/merchant/admin/service/impl/CouponTemplateServiceImpl.java
+@@ -35,15 +35,28 @@
+ package com.nageoffer.onecoupon.merchant.admin.service.impl;
+ 
+ import cn.hutool.core.bean.BeanUtil;
++import cn.hutool.core.util.ObjectUtil;
++import cn.hutool.core.util.StrUtil;
++import com.alibaba.fastjson2.JSON;
++import com.baomidou.mybatisplus.core.conditions.Wrapper;
++import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
++import com.baomidou.mybatisplus.core.metadata.IPage;
++import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
++import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
+ import com.mzt.logapi.context.LogRecordContext;
+ import com.mzt.logapi.starter.annotation.LogRecord;
++import com.nageoffer.onecoupon.framework.exception.ClientException;
++import com.nageoffer.onecoupon.framework.exception.ServiceException;
+ import com.nageoffer.onecoupon.merchant.admin.common.constant.MerchantAdminRedisConstant;
+ import com.nageoffer.onecoupon.merchant.admin.common.context.UserContext;
+ import com.nageoffer.onecoupon.merchant.admin.common.enums.CouponTemplateStatusEnum;
+ import com.nageoffer.onecoupon.merchant.admin.dao.entity.CouponTemplateDO;
+ import com.nageoffer.onecoupon.merchant.admin.dao.mapper.CouponTemplateMapper;
++import com.nageoffer.onecoupon.merchant.admin.dto.req.CouponTemplateNumberReqDTO;
++import com.nageoffer.onecoupon.merchant.admin.dto.req.CouponTemplatePageQueryReqDTO;
+ import com.nageoffer.onecoupon.merchant.admin.dto.req.CouponTemplateSaveReqDTO;
++import com.nageoffer.onecoupon.merchant.admin.dto.resp.CouponTemplatePageQueryRespDTO;
+ import com.nageoffer.onecoupon.merchant.admin.dto.resp.CouponTemplateQueryRespDTO;
+ import com.nageoffer.onecoupon.merchant.admin.service.CouponTemplateService;
+ import com.nageoffer.onecoupon.merchant.admin.service.basics.chain.MerchantAdminChainContext;
+@@ -56,6 +69,7 @@ import java.util.ArrayList;
+ import java.util.Collections;
+ import java.util.List;
+ import java.util.Map;
++import java.util.Objects;
+ import java.util.stream.Collectors;
+ 
+ import static com.nageoffer.onecoupon.merchant.admin.common.enums.ChainBizMarkEnum.MERCHANT_ADMIN_CREATE_COUPON_TEMPLATE_KEY;
+@@ -136,4 +150,106 @@ public class CouponTemplateServiceImpl extends ServiceImpl<CouponTemplateMapper,
+                 args.toArray()
+         );
+     }
++
++    @Override
++    public IPage<CouponTemplatePageQueryRespDTO> pageQueryCouponTemplate(CouponTemplatePageQueryReqDTO requestParam) {
++        // 构建分页查询模板 LambdaQueryWrapper
++        LambdaQueryWrapper<CouponTemplateDO> queryWrapper = Wrappers.lambdaQuery(CouponTemplateDO.class)
++                .eq(CouponTemplateDO::getShopNumber, UserContext.getShopNumber())
++                .like(StrUtil.isNotBlank(requestParam.getName()), CouponTemplateDO::getName, requestParam.getName())
++                .like(StrUtil.isNotBlank(requestParam.getGoods()), CouponTemplateDO::getGoods, requestParam.getGoods())
++                .eq(Objects.nonNull(requestParam.getType()), CouponTemplateDO::getType, requestParam.getType())
++                .eq(Objects.nonNull(requestParam.getTarget()), CouponTemplateDO::getTarget, requestParam.getTarget());
++
++        // MyBatis-Plus 分页查询优惠券模板信息
++        IPage<CouponTemplateDO> selectPage = couponTemplateMapper.selectPage(requestParam, queryWrapper);
++
++        // 转换数据库持久层对象为优惠券模板返回参数
++        return selectPage.convert(each -> BeanUtil.toBean(each, CouponTemplatePageQueryRespDTO.class));
++    }
++
++    @Override
++    public CouponTemplateQueryRespDTO findCouponTemplateById(String couponTemplateId) {
++        LambdaQueryWrapper<CouponTemplateDO> queryWrapper = Wrappers.lambdaQuery(CouponTemplateDO.class)
++                .eq(CouponTemplateDO::getShopNumber, UserContext.getShopNumber())
++                .eq(CouponTemplateDO::getId, couponTemplateId);
++
++        CouponTemplateDO couponTemplateDO = couponTemplateMapper.selectOne(queryWrapper);
++        return BeanUtil.toBean(couponTemplateDO, CouponTemplateQueryRespDTO.class);
++    }
++
++    @LogRecord(
++            success = "结束优惠券",
++            type = "CouponTemplate",
++            bizNo = "{{#couponTemplateId}}"
++    )
++    @Override
++    public void terminateCouponTemplate(String couponTemplateId) {
++        // 验证是否存在数据横向越权
++        LambdaQueryWrapper<CouponTemplateDO> queryWrapper = Wrappers.lambdaQuery(CouponTemplateDO.class)
++                .eq(CouponTemplateDO::getShopNumber, UserContext.getShopNumber())
++                .eq(CouponTemplateDO::getId, couponTemplateId);
++        CouponTemplateDO couponTemplateDO = couponTemplateMapper.selectOne(queryWrapper);
++        if (couponTemplateDO == null) {
++            // 一旦查询优惠券不存在，基本可判定横向越权，可上报该异常行为，次数多了后执行封号等处理
++            throw new ClientException("优惠券模板异常，请检查操作是否正确...");
++        }
++
++        // 验证优惠券模板是否正常
++        if (ObjectUtil.notEqual(couponTemplateDO.getStatus(), CouponTemplateStatusEnum.ACTIVE.getStatus())) {
++            throw new ClientException("优惠券模板已结束");
++        }
++
++        // 记录优惠券模板修改前数据
++        LogRecordContext.putVariable("originalData", JSON.toJSONString(couponTemplateDO));
++
++        // 修改优惠券模板为结束状态
++        CouponTemplateDO updateCouponTemplateDO = CouponTemplateDO.builder()
++                .status(CouponTemplateStatusEnum.ENDED.getStatus())
++                .build();
++        Wrapper<CouponTemplateDO> updateWrapper = Wrappers.lambdaUpdate(CouponTemplateDO.class)
++                .eq(CouponTemplateDO::getId, couponTemplateDO.getId())
++                .eq(CouponTemplateDO::getShopNumber, UserContext.getShopNumber());
++        couponTemplateMapper.update(updateCouponTemplateDO, updateWrapper);
++
++        // 修改优惠券模板缓存状态为结束状态
++        String couponTemplateCacheKey = String.format(MerchantAdminRedisConstant.COUPON_TEMPLATE_KEY, couponTemplateId);
++        stringRedisTemplate.opsForHash().put(couponTemplateCacheKey, "status", String.valueOf(CouponTemplateStatusEnum.ENDED.getStatus()));
++    }
++
++    @LogRecord(
++            success = "增加发行量：{{#requestParam.number}}",
++            type = "CouponTemplate",
++            bizNo = "{{#requestParam.couponTemplateId}}"
++    )
++    @Override
++    public void increaseNumberCouponTemplate(CouponTemplateNumberReqDTO requestParam) {
++        // 验证是否存在数据横向越权
++        LambdaQueryWrapper<CouponTemplateDO> queryWrapper = Wrappers.lambdaQuery(CouponTemplateDO.class)
++                .eq(CouponTemplateDO::getShopNumber, UserContext.getShopNumber())
++                .eq(CouponTemplateDO::getId, requestParam.getCouponTemplateId());
++        CouponTemplateDO couponTemplateDO = couponTemplateMapper.selectOne(queryWrapper);
++        if (couponTemplateDO == null) {
++            // 一旦查询优惠券不存在，基本可判定横向越权，可上报该异常行为，次数多了后执行封号等处理
++            throw new ClientException("优惠券模板异常，请检查操作是否正确...");
++        }
++
++        // 验证优惠券模板是否正常
++        if (ObjectUtil.notEqual(couponTemplateDO.getStatus(), CouponTemplateStatusEnum.ACTIVE.getStatus())) {
++            throw new ClientException("优惠券模板已结束");
++        }
++
++        // 记录优惠券模板修改前数据
++        LogRecordContext.putVariable("originalData", JSON.toJSONString(couponTemplateDO));
++
++        // 设置数据库优惠券模板增加库存发行量
++        int increased = couponTemplateMapper.increaseNumberCouponTemplate(UserContext.getShopNumber(), requestParam.getCouponTemplateId(), requestParam.getNumber());
++        if (!SqlHelper.retBool(increased)) {
++            throw new ServiceException("优惠券模板增加发行量失败");
++        }
++
++        // 增加优惠券模板缓存库存发行量
++        String couponTemplateCacheKey = String.format(MerchantAdminRedisConstant.COUPON_TEMPLATE_KEY, requestParam.getCouponTemplateId());
++        stringRedisTemplate.opsForHash().increment(couponTemplateCacheKey, "stock", requestParam.getNumber());
++    }
+ }
+diff --git a/merchant-admin/src/main/resources/mapper/CourseTemplateMapper.xml b/merchant-admin/src/main/resources/mapper/CourseTemplateMapper.xml
+new file mode 100644
+index 0000000..089bb0a
+--- /dev/null
++++ b/merchant-admin/src/main/resources/mapper/CourseTemplateMapper.xml
+@@ -0,0 +1,49 @@
++<?xml version="1.0" encoding="UTF-8" ?>
++
++<!--
++ ~ 牛券（oneCoupon）优惠券平台项目
++ ~
++ ~ 版权所有 (C) [2024-至今] [山东流年网络科技有限公司]
++ ~
++ ~ 保留所有权利。
++ ~
++ ~ 1. 定义和解释
++ ~    本文件（包括其任何修改、更新和衍生内容）是由[山东流年网络科技有限公司]及相关人员开发的。
++ ~    "软件"指的是与本文件相关的任何代码、脚本、文档和相关的资源。
++ ~
++ ~ 2. 使用许可
++ ~    本软件的使用、分发和解释均受中华人民共和国法律的管辖。只有在遵守以下条件的前提下，才允许使用和分发本软件：
++ ~    a. 未经[山东流年网络科技有限公司]的明确书面许可，不得对本软件进行修改、复制、分发、出售或出租。
++ ~    b. 任何未授权的复制、分发或修改都将被视为侵犯[山东流年网络科技有限公司]的知识产权。
++ ~
++ ~ 3. 免责声明
++ ~    本软件按"原样"提供，没有任何明示或暗示的保证，包括但不限于适销性、特定用途的适用性和非侵权性的保证。
++ ~    在任何情况下，[山东流年网络科技有限公司]均不对任何直接、间接、偶然、特殊、典型或间接的损害（包括但不限于采购替代商品或服务；使用、数据或利润损失）承担责任。
++ ~
++ ~ 4. 侵权通知与处理
++ ~    a. 如果[山东流年网络科技有限公司]发现或收到第三方通知，表明存在可能侵犯其知识产权的行为，公司将采取必要的措施以保护其权利。
++ ~    b. 对于任何涉嫌侵犯知识产权的行为，[山东流年网络科技有限公司]可能要求侵权方立即停止侵权行为，并采取补救措施，包括但不限于删除侵权内容、停止侵权产品的分发等。
++ ~    c. 如果侵权行为持续存在或未能得到妥善解决，[山东流年网络科技有限公司]保留采取进一步法律行动的权利，包括但不限于发出警告信、提起民事诉讼或刑事诉讼。
++ ~
++ ~ 5. 其他条款
++ ~    a. [山东流年网络科技有限公司]保留随时修改这些条款的权利。
++ ~    b. 如果您不同意这些条款，请勿使用本软件。
++ ~
++ ~ 未经[山东流年网络科技有限公司]的明确书面许可，不得使用此文件的任何部分。
++ ~
++ ~ 本软件受到[山东流年网络科技有限公司]及其许可人的版权保护。
++-->
++
++<!DOCTYPE mapper
++        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
++        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
++<mapper namespace="com.nageoffer.onecoupon.merchant.admin.dao.mapper.CouponTemplateMapper">
++
++    <!-- 增加优惠券模板发行量 -->
++    <update id="increaseNumberCouponTemplate">
++        UPDATE t_coupon_template
++        SET stock = stock + #{number}
++        WHERE shop_number = #{shopNumber}
++          AND id = #{couponTemplateId}
++    </update>
++</mapper>
+\ No newline at end of file
+diff --git a/merchant-admin/src/test/java/com/nageoffer/onecoupon/merchant/admin/template/parallel/CouponTemplateConcurrentInCreaseNumberTests.java b/merchant-admin/src/test/java/com/nageoffer/onecoupon/merchant/admin/template/parallel/CouponTemplateConcurrentInCreaseNumberTests.java
+new file mode 100644
+index 0000000..659e50a
+--- /dev/null
++++ b/merchant-admin/src/test/java/com/nageoffer/onecoupon/merchant/admin/template/parallel/CouponTemplateConcurrentInCreaseNumberTests.java
+@@ -0,0 +1,63 @@
++package com.nageoffer.onecoupon.merchant.admin.template.parallel;
++
++import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
++import com.baomidou.mybatisplus.core.toolkit.Wrappers;
++import com.nageoffer.onecoupon.merchant.admin.dao.entity.CouponTemplateDO;
++import com.nageoffer.onecoupon.merchant.admin.dao.mapper.CouponTemplateMapper;
++import com.nageoffer.onecoupon.merchant.admin.template.CouponTemplateTest;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.boot.test.context.SpringBootTest;
++
++import java.util.concurrent.ExecutorService;
++import java.util.concurrent.Executors;
++import java.util.concurrent.TimeUnit;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++
++/**
++ * 并行增加优惠券库存单元测试
++ */
++@SpringBootTest
++public class CouponTemplateConcurrentInCreaseNumberTests {
++
++    @Autowired
++    private CouponTemplateMapper couponTemplateMapper;
++
++    private CouponTemplateTest couponTemplateTest;
++    private CouponTemplateDO couponTemplateDO;
++
++    @BeforeEach
++    public void setUp() {
++        couponTemplateTest = new CouponTemplateTest();
++        couponTemplateDO = couponTemplateTest.buildCouponTemplateDO();
++        couponTemplateMapper.insert(couponTemplateDO);
++    }
++
++    @Test
++    public void testConcurrentIncreaseNumber() throws InterruptedException {
++        int threadCount = 200;
++        int increaseAmount = 10;
++        long shopNumber = couponTemplateDO.getShopNumber();
++        long couponTemplateId = couponTemplateDO.getId();
++
++        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
++
++        for (int i = 0; i < threadCount; i++) {
++            executorService.submit(() -> {
++                couponTemplateMapper.increaseNumberCouponTemplate(shopNumber, String.valueOf(couponTemplateId), increaseAmount);
++            });
++        }
++        executorService.shutdown();
++        executorService.awaitTermination(1, TimeUnit.MINUTES);
++
++        LambdaQueryWrapper<CouponTemplateDO> queryWrapper = Wrappers.lambdaQuery(CouponTemplateDO.class)
++                .eq(CouponTemplateDO::getShopNumber, shopNumber)
++                .eq(CouponTemplateDO::getId, couponTemplateDO.getId());
++        CouponTemplateDO updatedCouponTemplateDO = couponTemplateMapper.selectOne(queryWrapper);
++
++        int expectedNumber = couponTemplateDO.getStock() + (threadCount * increaseAmount);
++        assertEquals(expectedNumber, updatedCouponTemplateDO.getStock(), "The stock count should match the expected value.");
++    }
++}
+\ No newline at end of file

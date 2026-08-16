@@ -1,0 +1,534 @@
+body {
+    margin: 0px;
+    font-size: 14px;
+    background: #f0f3f8;
+    font-family: "PingFangSC-Regular","Helvetica Neue",Helvetica,"Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+}
+.top-bar {
+    height: 60px;
+    background: #EBEBEB;
+}
+.post {
+    margin: 0 auto;
+    width: 940px;
+    padding: 40px;
+    box-sizing: border-box;
+    position: relative;
+    background-color: white;
+}
+.post .title {
+    margin: 0px;
+    font-family: PingFangSC-Medium;
+    font-size: 20px;
+    color: #1A1A1A;
+    line-height: 30px;
+}
+.group-info {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #567895;
+}
+.group-info a {
+    color: #567895;
+    text-decoration: none;
+}
+.author-info {
+    margin-top: 30px;
+    margin-bottom: 24px;
+    height: 24px;
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.author-info .author {
+    display: flex;
+    align-items: center;
+}
+.author-info img {
+    height: 24px;
+    width: 24px;
+    border-radius: 12px;
+}
+.author-info .date {
+    color: #B3B3B3;
+}
+.author-info .nick-name {
+    color: #4D4D4D;
+    margin-left: 12px;
+}
+.content {
+    letter-spacing: 0;
+    color: #2F3034;
+    font-size: 16px;
+    word-wrap: break-word;
+    line-height: 28px;
+    white-space: pre-wrap;
+}
+.content div, .content p {
+    line-height: 28px;
+}
+.content figure {
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+}
+.content img {
+    max-width: 100%;
+    object-fit: cover;
+    display: inline-block;
+}
+.content a {
+    text-decoration: none;
+    color: #567895;
+}
+.content a:hover {
+    text-decoration: underline;
+}
+.content p {
+    margin: 0px;
+    white-space: pre-wrap;
+    tab-size: 4;
+}
+.content table {
+    display: block;
+    overflow: auto;
+    border: none;
+    border-collapse: collapse;
+    empty-cells: show;
+    max-width: 100%
+}
+.content table td {
+    min-width: 5px
+}
+.content table td,.content table th {
+    border: 1px solid #ddd
+}
+.content table td:empty,.content table th:empty {
+    height: 20px
+}
+.content table th {
+    background: #ececec
+}
+.content blockquote {
+    color: #9a9a9a;
+    margin: 15px 0 !important;
+    border-left: 3px solid #ccc !important;
+    padding-left: 10px !important;
+}
+.content code {
+    white-space: normal;
+    background-color: #f0f0f0;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+.content .article-hr {
+    border-style: solid;
+    border-width: 1px 0 0;
+    border-color: rgba(0, 0, 0, 0.1);
+    transform: scale(1, 0.5);
+    margin: 15px 0;
+}
+.content ol {
+    padding-left: 0;
+}
+.ql-snow .ql-editor .ql-code-block-container {
+    background-color: rgba(0, 0, 0, 0.03);
+    border: 1px solid #f0f0f0;
+    border-radius: 2px;
+    color: #333;
+    white-space: pre-wrap;
+}
+.content .ql-syntax {
+    background-color: #23241f;
+    color: #f8f8f2;
+    overflow: visible;
+    white-space: pre-wrap;
+    margin-bottom: 5px;
+    margin-top: 5px;
+    padding: 5px 10px;
+    border-radius: 3px;
+}
+.content pre {
+    white-space: pre-wrap;
+}
+.content ol, .content ul {
+    margin: 0;
+}
+.ql-align-center {
+    text-align: center;
+}
+.ql-align-right {
+    text-align: right;
+}
+ul {
+    list-style-type: disc;
+}
+footer {
+    margin-top: 48px;
+    margin-bottom: 48px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+footer img {
+    width: 18px;
+    height: 18px;
+    margin-left: 15px;
+}
+footer .text {
+    font-size: 15px;
+    color: #16B998;
+    margin: 0 15px 0 6px;
+}
+footer .horizon-line {
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    width: 50px;
+}
+.qrcode-container {
+    position: absolute;
+    left: 960px;
+    top: 0px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding: 20px 20px 15px 20px;
+    border: 2px solid rgba(0,0,0,0.05);
+}
+.qrcode-container img {
+    min-width: 140px;
+    width: 140px;
+    height: 140px;
+    margin-bottom: 15px;
+}
+.qrcode-container .text-desc {
+    font-size: 12px;
+    color:#B3B3B3;
+}
+#qrcode-url {
+    display: none;
+}
+.message-container-overlay {
+    position: fixed;
+    left: 50%;
+    top: 50px;
+    width: 400px;
+    margin-left: -200px;
+    margin-top: 10px;
+    z-index: 99;
+}
+.message-item {
+    margin-top: 5px;
+    height: 40px;
+    background: rgba(252, 192, 96, .9);
+    box-shadow: 0 2px 8px 0 rgba(227, 169, 33, .2);
+    z-index: 50;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+}
+.js-disable-copy {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+li.ql-indent-1:not([data-list]) {
+    counter-increment: list-1;
+    margin-left: 1.2em;
+}
+li.ql-indent-2:not([data-list]) {
+    list-style-type: circle;
+    counter-increment: list-2;
+    margin-left: 2.7em;
+}
+li.ql-indent-3:not([data-list]) {
+    list-style-type: circle;
+    counter-increment: list-3;
+    margin-left: 4.2em;
+}
+li.ql-indent-4:not([data-list]) {
+    list-style-type: circle;
+    counter-increment: list-4;
+    margin-left: 5.7em;
+}
+li.ql-indent-5:not([data-list]) {
+    list-style-type: circle;
+    counter-increment: list-5;
+    margin-left: 7.2em;
+}
+li.ql-indent-6:not([data-list]) {
+    list-style-type: circle;
+    counter-increment: list-6;
+    margin-left: 8.7em;
+}
+li.ql-indent-7:not([data-list]) {
+    list-style-type: circle;
+    counter-increment: list-7;
+    margin-left: 10.2em;
+}
+li.ql-indent-8:not([data-list]) {
+    list-style-type: circle;
+    counter-increment: list-8;
+    margin-left: 11.7em;
+}
+ol {
+    counter-reset: list-1 list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9;
+}
+ol li:not([data-list]) {
+    list-style-type: none !important;
+    counter-increment: list-0;
+}
+.ql-editor ol li:not([data-list])::before {
+    display: inline-block;
+    content: counter(list-0, decimal) ".";
+    position: relative;
+    left: -10px;
+}
+ol li.ql-indent-1:not([data-list])::before {
+    content: counter(list-1, decimal) ".";
+}
+ol li.ql-indent-2:not([data-list])::before {
+    content: counter(list-2, decimal) ".";
+}
+ol li.ql-indent-3:not([data-list])::before {
+    content: counter(list-3, decimal) ".";
+}
+ol li.ql-indent-4:not([data-list])::before {
+    content: counter(list-4, decimal) ".";
+}
+ol li.ql-indent-5:not([data-list])::before {
+    content: counter(list-5, decimal) ".";
+}
+ol li.ql-indent-6:not([data-list])::before {
+    content: counter(list-6, decimal) ".";
+}
+ol li.ql-indent-7:not([data-list])::before {
+    content: counter(list-7, decimal) ".";
+}
+ol li.ql-indent-8:not([data-list])::before {
+    content: counter(list-8, decimal) ".";
+}
+ol li.ql-indent-9:not([data-list])::before {
+    content: counter(list-9, decimal) ".";
+}
+h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+}
+
+.ql-custom-audio-container {
+    display: flex;
+}
+
+.custom-audio-wrapper {
+    width: 420px;
+    height: 60px;
+    background: #FBFBFB;
+    border-radius: 8px;
+    border: 1px solid rgba(197, 198, 203, 0.24);
+    display: flex;
+    margin: 16px 0;
+    padding: 10px 20px 8px 16px;
+    box-sizing: border-box;
+}
+
+.custom-audio-wrapper audio {
+    display: none;
+}
+
+.custom-audio-wrapper .custom-controls {
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+}
+
+.custom-audio-wrapper .custom-controls .info {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.custom-audio-wrapper .custom-controls .info i {
+    width: 24px;
+    height: 26px;
+    background: url('../assets/audio.png') no-repeat;
+    background-size: 100%;
+    margin-right: 16px;
+}
+
+.custom-audio-wrapper .custom-controls .info .desc {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.custom-audio-wrapper .custom-controls .info .file-name {
+    font-size: 15px;
+    color: #5A5C66;
+    line-height: 21px;
+    max-width: 279px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
+}
+
+.custom-audio-wrapper .custom-controls .info .progress-box {
+    display: flex;
+    align-items: center;
+}
+
+.custom-audio-wrapper .custom-controls .info .progress-box .file-size,
+.custom-audio-wrapper .custom-controls .info .progress-box .time-display {
+    height: 17px;
+    line-height: 17px;
+    font-size: 12px;
+    color: #C5C6CB;
+}
+
+.custom-audio-wrapper .custom-controls .info .progress-box .progress-container {
+    min-width: 168px;
+    height: 2px;
+    background: rgba(197, 198, 203, 0.24);
+    border-radius: 1px;
+    margin: 0 12px;
+    position: relative;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.custom-audio-wrapper .custom-controls .info .progress-box .progress-container::before {
+    content: "";
+    position: absolute;
+    top: -5px;
+    bottom: -5px;
+    left: -5px;
+    right: -5px;
+    background: transparent;
+}
+
+.custom-audio-wrapper .custom-controls .info .progress-box .progress-container .progress-bar {
+    top: 0;
+    position: absolute;
+    height: 100%;
+    background: #16B998;
+    border-radius: 1px;
+    width: 0%;
+}
+
+.custom-audio-wrapper .custom-controls .info .progress-box .progress-container .progress-handle {
+    position: absolute;
+    top: 50%;
+    left: 0%;
+    width: 6px;
+    height: 6px;
+    background: #16B998;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+/* hover 时小圆点显示 */
+.custom-audio-wrapper .custom-controls .info .progress-box .progress-container:hover .progress-handle {
+    opacity: 1;
+}
+
+.custom-audio-wrapper .custom-controls .line {
+    width: 1px;
+    height: 30px;
+    background: rgba(197, 198, 203, 0.24);
+    margin: 0 20px;
+    margin-left: auto;
+}
+
+.custom-audio-wrapper .custom-controls .play-pause-btn {
+    width: 28px;
+    height: 28px;
+    background-image: url('../assets/audio-player-start.png');
+    background-size: 100%;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+/* play 状态的背景切换 */
+.custom-audio-wrapper .custom-controls .play-pause-btn.play {
+    background-image: url('../assets/audio-player-pause.png') !important;
+}
+.custom-audio-wrapper .custom-controls .play-pause-btn.loading {
+    animation: spin 1s linear infinite;
+    background-image: url('../assets/audio_loading.svg') !important;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 风险提示 */
+.risk_warning_tips {
+    font-size: 12px;
+    font-size: 12px;
+    color: #C5C6CB;
+    line-height: 16px;
+    margin-top: 20px;
+    padding:0 15px;
+}
+
+/* ==========================================================================
+ * Dark mode for page shell — only when .tiptap-preview is visible
+ * .tiptap-preview is always in DOM but hidden via inline style when inactive,
+ * so we exclude elements with style*="display: none" to avoid false matches.
+ * Color reference: article-preview.component.scss dark mode
+ * ========================================================================== */
+@media (prefers-color-scheme: dark) {
+
+    html:has(.tiptap-preview:not([style*="display: none"])) body {
+                background: #080C10;
+    }
+
+    .risk_warning_tips {
+        color: #9ca3af;
+    }
+
+    html:has(.tiptap-preview:not([style*="display: none"])) .post {
+        background-color: #11161D;
+  }
+
+  /* Title */
+  html:has(.tiptap-preview:not([style*="display: none"])) .post .title {
+        color: #f0f4f8;
+  }
+
+  /* Group info */
+  html:has(.tiptap-preview:not([style*="display: none"])) .group-info,
+  html:has(.tiptap-preview:not([style*="display: none"])) .group-info a {
+        color: #86b8d8;
+  }
+
+  /* Author info */
+  html:has(.tiptap-preview:not([style*="display: none"])) .author-info .nick-name {
+        color: #b8c2cc;
+  }
+
+  html:has(.tiptap-preview:not([style*="display: none"])) .author-info .date {
+        color: #7d8792;
+  }
+
+  /* Footer */
+  html:has(.tiptap-preview:not([style*="display: none"])) footer .horizon-line {
+      border-bottom-color: #1C2835;
+  }
+
+  /* QR code container */
+  html:has(.tiptap-preview:not([style*="display: none"])) .qrcode-container {
+      border-color: #1C2835;
+  }
+
+  html:has(.tiptap-preview:not([style*="display: none"])) .qrcode-container .text-desc {
+        color: #858f9b;
+  }
+
+}

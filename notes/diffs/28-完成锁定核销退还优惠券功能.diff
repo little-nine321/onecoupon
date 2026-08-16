@@ -1,0 +1,7 @@
+﻿本小节未找到独立远程分支差异。
+
+教程文件：
+D:\study\java\oneCoupon\第③章节：分发&引擎服务\《牛券oneCoupon优惠券系统设计》第28小节：完成锁定_核销_退还优惠券功能.html
+
+说明：
+第 28 小节涉及用户优惠券锁定、核销、退还以及结算记录等能力。当前本地远程分支没有单独停在该小节的节点，相关最终代码可在 origin/main 的 engine 模块中查看，正文将基于 origin/main 的 UserCouponServiceImpl、CouponSettlementDO、相关请求 DTO 和 Mapper 进行讲解。
